@@ -1206,6 +1206,16 @@ Disconnected students:
     receive stored unread notifications when they reconnect.
 ```
 
+Notifications are inserted in the same transaction as assignment publication/updates,
+announcements, and course enrolment, then streamed only after commit. Streams use bearer
+authorization through Fetch streaming, heartbeat comments, and a 60-second connection
+lifetime followed by authenticated reconnection. On connection and events the browser
+reloads the persisted inbox; missed live events do not lose notifications. The inbox returns
+the latest 100 records and a total unread count. Read actions require recipient ownership.
+Announcements use a nullable `deleted_at` timestamp; deletion hides the announcement while
+retaining already-delivered notification history. SSE connections are held by one API process;
+multiple server instances would require shared fan-out infrastructure in a later deployment.
+
 ### 19.2 Example Event
 
 ```text
