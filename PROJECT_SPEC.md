@@ -468,6 +468,7 @@ A record may be created when the assignment is published or lazily when the stud
 | session_id | UUID PK | |
 | course_id | UUID FK | → courses |
 | schedule_id | UUID FK | → schedules, nullable |
+| device_id | UUID FK | → biometric_devices; one active session per device |
 | opened_by | UUID FK | → users |
 | opened_at | TIMESTAMP | |
 | closed_at | TIMESTAMP | nullable |
@@ -714,6 +715,7 @@ requests. Duplicate enrolments return 409; course deletion archives rather than 
 | GET | `/api/attendance-sessions/:id` | Session details | Lecturer |
 | PATCH | `/api/attendance-sessions/:id/close` | Close session | Lecturer |
 | GET | `/api/attendance-sessions/:id/live` | Live register | Lecturer |
+| GET | `/api/attendance/devices` | Active devices available when opening a session | Lecturer |
 
 ---
 
@@ -726,6 +728,12 @@ requests. Duplicate enrolments return 409; course deletion archives rather than 
 | GET | `/api/attendance/my/summary` | Student attendance percentages | Student |
 | GET | `/api/courses/:courseId/attendance` | Course attendance report | Lecturer |
 | GET | `/api/attendance-sessions/:id/records` | Session attendance list | Lecturer |
+
+An opened attendance session is assigned to one active device and captures the enrolled
+student roster at that instant. The snapshot prevents later enrolment changes from
+altering historical eligibility or official closed-session percentages. A device can have
+only one active session at a time; a course can also have only one. Attendance records use
+server time and must reference a student from that session snapshot.
 
 ---
 

@@ -11,6 +11,7 @@ import { AssignmentsPage } from '../pages/AssignmentsPage.jsx';
 import { NotificationsPage } from '../pages/NotificationsPage.jsx';
 import { Announcements } from '../features/announcements/Announcements.jsx';
 import { CalendarPage } from '../pages/CalendarPage.jsx';
+import { AttendancePage } from '../pages/AttendancePage.jsx';
 
 export function AppRoutes() {
   return (
@@ -28,6 +29,7 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="assignments" element={<AssignmentsPage />} /></Route>
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="announcements" element={<Announcements />} /></Route>
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="calendar" element={<CalendarPage />} /></Route>
+        <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="attendance" element={<AttendancePage />} /></Route>
         <Route element={<ProtectedRoute />}><Route path="notifications" element={<NotificationsPage />} /></Route>
       </Route>
     </Routes>

@@ -256,3 +256,19 @@ h1 {
  .calendar-day time { color: #58645d; font-size: .85rem; }
  .calendar-event { border-left: 3px solid #32634c; padding: .5rem .75rem; margin-top: 1rem; background: #f5f8f5; overflow-wrap: anywhere; }
  .deadline-event { border-left-color: #94682c; background: #fcf8f0; }
+ .attendance-device { display: grid; max-width: 28rem; gap: .4rem; margin: 1rem 0; }
+ .attendance-status { border-left: 3px solid #32634c; background: #f5f8f5; padding: .75rem; }
+ .attendance-register { margin-top: 1rem; }
+ .attendance-register ol { padding-left: 1.5rem; }
+ .attendance-register li { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid #e5e9e5; }
+ .attendance-history { margin-top: 1.5rem; }
+ .attendance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+ .attendance-summary article { border: 1px solid #d9dfda; border-radius: 8px; padding: 1rem; }
+ .attendance-device { display: grid; max-width: 28rem; gap: .4rem; margin: 1rem 0; }
+ .attendance-status { border-left: 3px solid #32634c; background: #f5f8f5; padding: .75rem; }
+ .attendance-register { margin-top: 1rem; }
+ .attendance-register ol { padding-left: 1.5rem; }
+ .attendance-register li { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid #e5e9e5; }
+ .attendance-history { margin-top: 1.5rem; }
+ .attendance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+ .attendance-summary article { border: 1px solid #d9dfda; border-radius: 8px; padding: 1rem; }

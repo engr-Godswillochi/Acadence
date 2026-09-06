@@ -14,7 +14,7 @@ export function AppShell() {
           </span>
           <span>Acadence</span>
         </Link>
-        {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}{user.role === 'STUDENT' && <><Link to="/assignments">Assignments</Link><Link to="/announcements">Announcements</Link></>}<Link to="/notifications">Notifications{notifications?.unreadCount ? ` (${notifications.unreadCount})` : ''}</Link><Link to="/account">Account</Link></nav>}
+        {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}{user.role === 'STUDENT' && <><Link to="/assignments">Assignments</Link><Link to="/announcements">Announcements</Link><Link to="/attendance">Attendance</Link></>}<Link to="/notifications">Notifications{notifications?.unreadCount ? ` (${notifications.unreadCount})` : ''}</Link><Link to="/account">Account</Link></nav>}
       </header>
 
       {user?.role === 'STUDENT' && <nav aria-label="Calendar navigation"><Link to="/calendar">Academic calendar</Link></nav>}

@@ -769,3 +769,4 @@ Add future durable discoveries here.
 - Commit coherent, validated changes locally as work progresses. Do not push commits unless explicitly instructed.
 - If a task process stalls after a reasonable wait, terminate that specific process, inspect partial effects, and retry; never terminate unrelated processes by name.
 - SQL migrations under backend/src/db/migrations are source files and must remain tracked despite the general SQL dump ignore rule.
+- Attendance sessions are bound to one active biometric device and snapshot eligible enrolled students at opening; only closed snapshots count toward official percentages.

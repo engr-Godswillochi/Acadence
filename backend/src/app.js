@@ -12,6 +12,7 @@ import { createAssignmentRouter } from './modules/assignments/assignment.routes.
 import { createAnnouncementRouter } from './modules/announcements/announcement.routes.js';
 import { createNotificationRouter } from './modules/notifications/notification.routes.js';
 import { createScheduleRouter } from './modules/schedules/schedule.routes.js';
+import { createAttendanceRouter } from './modules/attendance/attendance.routes.js';
 
 export function createApp({ authService = createAuthService() } = {}) {
   const app = express();
@@ -42,6 +43,7 @@ export function createApp({ authService = createAuthService() } = {}) {
   app.use('/api', createAssignmentRouter(authService));
   app.use('/api', createAnnouncementRouter(authService));
   app.use('/api', createScheduleRouter(authService));
+  app.use('/api', createAttendanceRouter(authService));
   app.use('/api/notifications', createNotificationRouter(authService));
   app.use(notFoundHandler);
   app.use(errorHandler);
