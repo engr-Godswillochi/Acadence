@@ -1391,6 +1391,15 @@ Sort options:
 
 ### 22.4 Student Calendar
 
+The calendar uses a Monday–Sunday weekly view with previous/next-week navigation.
+Class schedules recur weekly for active enrolled courses, in the institutional timezone
+Africa/Lagos (WAT); assignment timestamps are converted to that same timezone.
+Schedule inputs use 24-hour HH:mm, require a venue (maximum 160 characters), and cannot
+span midnight. Partial edits validate the merged time range. Course owners alone may
+create, edit, or remove schedules. Each change persists SCHEDULE_CHANGED notifications
+for currently enrolled students in the same transaction, then streams them after commit.
+Archived courses and removed enrolments disappear from the combined calendar.
+
 Displays:
 
 - class schedule;

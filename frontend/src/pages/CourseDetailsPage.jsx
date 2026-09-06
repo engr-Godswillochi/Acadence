@@ -6,6 +6,7 @@ import { CourseForm } from '../features/courses/CourseForm.jsx';
 import { EnrolmentPanel } from '../features/courses/EnrolmentPanel.jsx';
 import { CourseAssignments } from '../features/assignments/CourseAssignments.jsx';
 import { Announcements } from '../features/announcements/Announcements.jsx';
+import { CourseSchedules } from '../features/schedules/CourseSchedules.jsx';
 
 function CourseDetails({ id }) {
   const { token, user, logout } = useAuth();
@@ -37,6 +38,7 @@ function CourseDetails({ id }) {
     {editing && <CourseForm initial={course} onCancel={() => setEditing(false)} onSave={async (data) => { const result = await coursesApi.update(token, id, data); setCourse(result.course); setEditing(false); }} />}
     <CourseAssignments courseId={id} />
     <Announcements courseId={id} />
+    <CourseSchedules courseId={id} />
     {lecturer && <EnrolmentPanel token={token} courseId={id} />}
   </section>;
 }

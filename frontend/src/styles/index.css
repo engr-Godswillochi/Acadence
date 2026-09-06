@@ -250,3 +250,9 @@ h1 {
     scroll-behavior: auto !important;
   }
 }
+ .calendar-week { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+ .calendar-day { border: 1px solid #d9dfda; border-radius: 8px; padding: 1rem; min-width: 0; }
+ .calendar-day h3 { display: flex; justify-content: space-between; gap: .5rem; }
+ .calendar-day time { color: #58645d; font-size: .85rem; }
+ .calendar-event { border-left: 3px solid #32634c; padding: .5rem .75rem; margin-top: 1rem; background: #f5f8f5; overflow-wrap: anywhere; }
+ .deadline-event { border-left-color: #94682c; background: #fcf8f0; }

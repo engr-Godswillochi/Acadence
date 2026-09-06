@@ -17,6 +17,7 @@ export function AppShell() {
         {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}{user.role === 'STUDENT' && <><Link to="/assignments">Assignments</Link><Link to="/announcements">Announcements</Link></>}<Link to="/notifications">Notifications{notifications?.unreadCount ? ` (${notifications.unreadCount})` : ''}</Link><Link to="/account">Account</Link></nav>}
       </header>
 
+      {user?.role === 'STUDENT' && <nav aria-label="Calendar navigation"><Link to="/calendar">Academic calendar</Link></nav>}
       <main className="page-content">
         <Outlet />
       </main>
