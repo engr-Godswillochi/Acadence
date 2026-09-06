@@ -7,6 +7,7 @@ import { ProtectedRoute } from '../features/auth/ProtectedRoute.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
 import { CoursesPage } from '../pages/CoursesPage.jsx';
 import { CourseDetailsPage } from '../pages/CourseDetailsPage.jsx';
+import { AssignmentsPage } from '../pages/AssignmentsPage.jsx';
 
 export function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ export function AppRoutes() {
           <Route path="courses/:id" element={<CourseDetailsPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
+        <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="assignments" element={<AssignmentsPage />} /></Route>
       </Route>
     </Routes>
   );

@@ -4,6 +4,7 @@ import { useAuth } from '../features/auth/useAuth.js';
 import { coursesApi } from '../features/courses/courses.api.js';
 import { CourseForm } from '../features/courses/CourseForm.jsx';
 import { EnrolmentPanel } from '../features/courses/EnrolmentPanel.jsx';
+import { CourseAssignments } from '../features/assignments/CourseAssignments.jsx';
 
 function CourseDetails({ id }) {
   const { token, user, logout } = useAuth();
@@ -33,6 +34,7 @@ function CourseDetails({ id }) {
   const lecturer = user.role === 'LECTURER';
   return <section><Link to="/courses">Back to courses</Link><div className="page-heading"><div><p className="eyebrow">{course.courseCode}</p><h1 className="page-title">{course.courseTitle}</h1><p>{course.academicSession} · {course.semester === 'FIRST' ? 'First' : 'Second'} semester · {course.creditUnits} credits</p></div>{lecturer && <div className="actions"><button className="secondary" disabled={busy} onClick={() => setEditing(true)}>Edit course</button><button className="secondary" disabled={busy} onClick={archive}>Archive course</button></div>}</div>
     {editing && <CourseForm initial={course} onCancel={() => setEditing(false)} onSave={async (data) => { const result = await coursesApi.update(token, id, data); setCourse(result.course); setEditing(false); }} />}
+    <CourseAssignments courseId={id} />
     {lecturer && <EnrolmentPanel token={token} courseId={id} />}
   </section>;
 }

@@ -47,6 +47,14 @@ table { border-collapse: collapse; width: 100%; text-align: left; }
 th, td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: .95rem; }
 th { color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+textarea { width: 100%; padding: .8rem; border: 1px solid var(--border); border-radius: 6px; font: inherit; resize: vertical; }
+textarea:focus-visible { outline: 3px solid #91c9c3; outline-offset: 3px; }
+.course-section { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 2rem; }
+.task-list { list-style: none; padding: 0; }
+.task-list li { padding: 1.5rem 0; border-bottom: 1px solid var(--border); }
+.task-list h2 { font-size: 1.2rem; }
+.assignment-description { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; }
+.filters { display: flex; flex-wrap: wrap; gap: 1rem; }
 
 * {
   box-sizing: border-box;

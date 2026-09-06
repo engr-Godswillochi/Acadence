@@ -8,6 +8,7 @@ import { notFoundHandler } from './middleware/notFound.middleware.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createAuthService } from './modules/auth/auth.service.js';
 import { createCourseRouter } from './modules/courses/course.routes.js';
+import { createAssignmentRouter } from './modules/assignments/assignment.routes.js';
 
 export function createApp({ authService = createAuthService() } = {}) {
   const app = express();
@@ -35,6 +36,7 @@ export function createApp({ authService = createAuthService() } = {}) {
 
   app.use('/api/auth', createAuthRouter(authService));
   app.use('/api/courses', createCourseRouter(authService));
+  app.use('/api', createAssignmentRouter(authService));
   app.use(notFoundHandler);
   app.use(errorHandler);
 

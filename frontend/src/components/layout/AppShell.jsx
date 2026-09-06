@@ -12,7 +12,7 @@ export function AppShell() {
           </span>
           <span>Acadence</span>
         </Link>
-        {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}<Link to="/account">Account</Link></nav>}
+        {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}{user.role === 'STUDENT' && <Link to="/assignments">Assignments</Link>}<Link to="/account">Account</Link></nav>}
       </header>
 
       <main className="page-content">

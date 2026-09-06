@@ -416,6 +416,12 @@ Important design decision:
 
 `priority_score` is **not stored permanently** in this table because priority depends on the individual student's current pending-task set and changes as deadlines approach. It is calculated dynamically when a student's task list is requested.
 
+Assignments include nullable `deleted_at` (TIMESTAMPTZ). Deletion removes an assignment
+from active views while retaining its completion records. Creation requires a future
+deadline; edits may retain or correct historical deadlines. Partial edits preserve omitted
+fields. Completion records are created lazily, and repeating COMPLETED preserves the
+original completion timestamp. Marking PENDING clears that timestamp.
+
 ---
 
 ### 10.6 `student_assignment_status`
@@ -828,6 +834,12 @@ Example:
 ```
 
 The exact thresholds may be adjusted during implementation.
+
+The accepted implementation uses the 14-day window and weights above, with fractional
+days. Pending tasks precede completed tasks, then sort by descending priority, deadline,
+and assignment ID for stable ties. Overdue means strictly past the deadline and not
+completed. The API calculates these values at request time; the browser filters and sorts
+the returned task list without deciding official status or priority.
 
 ---
 
