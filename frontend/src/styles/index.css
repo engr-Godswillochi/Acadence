@@ -26,6 +26,27 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .form-hint { color: var(--muted); font-size: .875rem; }
 .auth-switch { margin-top: 1.5rem; }
 .auth-switch a { color: var(--accent); }
+nav, .actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+nav a { color: var(--accent); text-underline-offset: .2em; }
+.page-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin: 2rem 0; }
+.page-title { font-family: inherit; font-size: 2rem; font-weight: 600; max-width: none; letter-spacing: -.025em; line-height: 1.2; margin-bottom: .75rem; }
+.course-form { background: white; border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; max-width: 38rem; margin: 1.5rem 0; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.secondary { color: var(--accent); background: transparent; }
+.course-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.course-list li { border-bottom: 1px solid var(--border); }
+.course-list a { display: grid; gap: .5rem; padding: 1.5rem 0; color: inherit; text-decoration: none; }
+.course-list a:hover { background: var(--accent-soft); }
+.course-list strong { color: var(--accent); }
+.course-list small { color: var(--muted); font-size: .875rem; }
+.empty-state { padding: 2rem 0; color: var(--muted); line-height: 1.6; }
+.enrolment-panel { margin-top: 3rem; }
+.enrolment-panel form { max-width: 28rem; }
+.table-scroll { overflow-x: auto; margin-top: 1.5rem; }
+table { border-collapse: collapse; width: 100%; text-align: left; }
+th, td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: .95rem; }
+th { color: var(--muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
 * {
   box-sizing: border-box;

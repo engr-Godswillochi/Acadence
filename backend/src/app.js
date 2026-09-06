@@ -6,8 +6,10 @@ import { env } from './config/env.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { notFoundHandler } from './middleware/notFound.middleware.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
+import { createAuthService } from './modules/auth/auth.service.js';
+import { createCourseRouter } from './modules/courses/course.routes.js';
 
-export function createApp({ authService } = {}) {
+export function createApp({ authService = createAuthService() } = {}) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -32,6 +34,7 @@ export function createApp({ authService } = {}) {
   });
 
   app.use('/api/auth', createAuthRouter(authService));
+  app.use('/api/courses', createCourseRouter(authService));
   app.use(notFoundHandler);
   app.use(errorHandler);
 

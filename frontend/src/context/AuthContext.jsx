@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AuthContext } from '../features/auth/auth.context.js';
 import { authApi } from '../features/auth/auth.api.js';
 
@@ -49,13 +49,13 @@ export function AuthProvider({ children }) {
     setStatus('authenticated');
   }
 
-  function logout() {
+  const logout = useCallback(() => {
     storeToken(null);
     setToken(null);
     setUser(null);
     setStatus('anonymous');
     setError('');
-  }
+  }, []);
 
   return <AuthContext.Provider value={{
     token, user, status, error, logout,

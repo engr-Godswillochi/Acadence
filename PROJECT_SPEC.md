@@ -353,6 +353,12 @@ Recommended constraint:
 UNIQUE(course_code, academic_session, semester)
 ```
 
+Courses also include nullable `archived_at` (TIMESTAMPTZ). DELETE archives a course,
+preserving its records and the unique course/session/semester identity. Archived courses
+are excluded from active lists and reject normal detail and mutation requests.
+Credit units are constrained to integers from 1 to 6; academic sessions use consecutive
+years in YYYY/YYYY format. Lecturer ownership is checked on every management operation.
+
 ---
 
 ### 10.3 `enrolments`
@@ -634,6 +640,12 @@ Device routes require a valid device API key.
 | GET | `/api/courses/:id/students` | List enrolled students | Lecturer |
 | POST | `/api/courses/:id/enrolments` | Enrol student | Lecturer |
 | DELETE | `/api/courses/:id/enrolments/:studentId` | Remove student | Lecturer |
+
+Enrolment creation accepts exactly one of `studentId` (UUID) or `studentEmail` (normalized
+email). Only an existing STUDENT account may be enrolled. The lecturer must own the course.
+The student register is lecturer-owner only. Student course reads require current enrolment.
+Enrolment changes and archival lock the course row in a transaction to serialize concurrent
+requests. Duplicate enrolments return 409; course deletion archives rather than erases data.
 
 ---
 

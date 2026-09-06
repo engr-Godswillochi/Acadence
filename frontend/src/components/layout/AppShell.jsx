@@ -1,6 +1,8 @@
 import { Link, Outlet } from 'react-router-dom';
+import { useAuth } from '../../features/auth/useAuth.js';
 
 export function AppShell() {
+  const { user } = useAuth();
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -10,7 +12,7 @@ export function AppShell() {
           </span>
           <span>Acadence</span>
         </Link>
-        <span className="phase-label">Academic workspace</span>
+        {user && <nav aria-label="Main navigation">{user.role !== 'ADMIN' && <Link to="/courses">Courses</Link>}<Link to="/account">Account</Link></nav>}
       </header>
 
       <main className="page-content">

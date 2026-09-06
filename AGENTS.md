@@ -767,4 +767,5 @@ Add future durable discoveries here.
 - The frontend uses Vite and React Router; the backend verifies its PostgreSQL connection before listening for requests.
 - After completing and validating an implementation phase, proceed directly to the next phase. Do not advance past a phase with unresolved validation failures or required integration checks.
 - Commit coherent, validated changes locally as work progresses. Do not push commits unless explicitly instructed.
+- If a task process stalls after a reasonable wait, terminate that specific process, inspect partial effects, and retry; never terminate unrelated processes by name.
 - SQL migrations under backend/src/db/migrations are source files and must remain tracked despite the general SQL dump ignore rule.

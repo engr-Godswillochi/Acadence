@@ -16,8 +16,14 @@ React and Vite application for the student, lecturer, and device-administrator i
 - `npm test` — run authentication form, routing, and session tests.
 - `npm run preview` — preview the production build locally.
 
-Pages should compose feature modules as later phases are implemented. Shared components belong in `src/components`, while API configuration and future API clients belong in `src/services` and `src/config`.
+Pages compose feature modules. Shared components belong in `src/components`; shared HTTP
+transport belongs in `src/services` and API configuration in `src/config`. Domain-specific
+API calls belong in their respective `src/features` directories.
 
 Sign-in and registration are at `/login` and `/register`. `/account` requires authentication.
 Tokens persist in sessionStorage for the current tab and are validated with the API on reload.
 Sign-out clears the browser session; bearer tokens already issued expire on the server.
+
+`/courses` lists the current user's courses. Lecturers can create courses, edit or archive
+them on `/courses/:id`, and manage enrolment using student account emails. Students see
+only their enrolled courses. Administrator accounts have no course-management access.
