@@ -763,3 +763,8 @@ Add future durable discoveries here.
 - Frontend and backend remain separate top-level applications.
 - Backend architecture is a modular monolith organized by domain.
 - UI should be restrained, minimal, premium, and suitable for an academic project defense.
+- Frontend and backend are separate npm-managed ES module applications requiring Node.js 20.19 or newer.
+- The frontend uses Vite and React Router; the backend verifies its PostgreSQL connection before listening for requests.
+- After completing and validating an implementation phase, proceed directly to the next phase. Do not advance past a phase with unresolved validation failures or required integration checks.
+- Commit coherent, validated changes locally as work progresses. Do not push commits unless explicitly instructed.
+- SQL migrations under backend/src/db/migrations are source files and must remain tracked despite the general SQL dump ignore rule.

@@ -34,3 +34,21 @@ Artificial Intelligence and Machine Learning are intentionally excluded from the
 ## Development Order
 
 Follow the implementation phases in `PROJECT_SPEC.md`, beginning with foundation, authentication, courses/enrolment, and assignments before hardware integration.
+
+## Foundation Development
+
+Use Node.js 20.19 or newer and a local PostgreSQL server.
+
+### Backend
+
+1. Run `npm install` in `backend/`.
+2. Copy `backend/.env.example` to `backend/.env` and configure `DATABASE_URL`.
+3. Set a unique random `JWT_SECRET` of at least 32 characters in `backend/.env`.
+4. Run `npm run db:migrate`, then `npm run dev` in `backend/`.
+
+### Frontend
+
+1. Run `npm install` in `frontend/`.
+2. Run `npm run dev` in `frontend/`.
+
+Each application has its own lint command. The backend also provides `npm test`, and the frontend provides `npm run build` for production validation.

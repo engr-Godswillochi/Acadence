@@ -25,6 +25,7 @@ Thumbs.db
 
 # Local databases / dumps
 *.sql
+!backend/src/db/migrations/*.sql
 *.dump
 
 # Temporary files

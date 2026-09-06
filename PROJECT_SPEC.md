@@ -597,6 +597,17 @@ User 1 ─── * Notification
 
 All protected user routes require a valid JWT.
 
+Public prototype registration accepts STUDENT and LECTURER only. ADMIN accounts cannot
+be created through the public endpoint. An institutional deployment must add authorized
+lecturer provisioning before opening registration to the public.
+
+Authentication successes use `{ success: true, data: { accessToken, user } }`; the current
+user endpoint returns `{ success: true, data: { user } }`. Passwords require at least eight
+characters and at most 72 UTF-8 bytes. Email addresses are normalized to lowercase and
+academic identifiers to uppercase. Authentication attempts are limited to 20 per IP per
+15 minutes across login and registration. Validation errors may include an `error.details`
+array of field/message objects. JWTs use HS256 with a configured expiry (24h by default).
+
 Device routes require a valid device API key.
 
 ---
@@ -1187,131 +1198,80 @@ data: {
 
 ## 20. Backend Module Structure
 
-Recommended structure:
+The backend is a modular monolith. Each domain owns its routes, controllers, services,
+validation and repositories under `backend/src/modules/<domain>/`, following AGENTS.md.
+Controllers translate HTTP requests; services enforce business rules; repositories own
+parameterized SQL. Shared middleware, configuration and utilities live outside modules.
 
 ```text
-backend/
-└── src/
-    ├── config/
-    │   ├── database.js
-    │   └── env.js
-    │
-    ├── controllers/
-    │   ├── auth.controller.js
-    │   ├── course.controller.js
-    │   ├── enrolment.controller.js
-    │   ├── assignment.controller.js
-    │   ├── announcement.controller.js
-    │   ├── schedule.controller.js
-    │   ├── attendanceSession.controller.js
-    │   ├── attendance.controller.js
-    │   ├── biometric.controller.js
-    │   ├── device.controller.js
-    │   ├── notification.controller.js
-    │   ├── dashboard.controller.js
-    │   └── analytics.controller.js
-    │
-    ├── middleware/
-    │   ├── auth.middleware.js
-    │   ├── role.middleware.js
-    │   ├── deviceAuth.middleware.js
-    │   ├── error.middleware.js
-    │   └── validate.middleware.js
-    │
-    ├── routes/
-    │   ├── auth.routes.js
-    │   ├── course.routes.js
-    │   ├── assignment.routes.js
-    │   ├── announcement.routes.js
-    │   ├── schedule.routes.js
-    │   ├── attendance.routes.js
-    │   ├── device.routes.js
-    │   ├── biometric.routes.js
-    │   ├── notification.routes.js
-    │   └── dashboard.routes.js
-    │
-    ├── services/
-    │   ├── auth.service.js
-    │   ├── priority.service.js
-    │   ├── attendance.service.js
-    │   ├── notification.service.js
-    │   ├── biometric.service.js
-    │   └── analytics.service.js
-    │
-    ├── repositories/
-    │   └── ...
-    │
-    ├── utils/
-    │   ├── apiError.js
-    │   └── asyncHandler.js
-    │
-    └── app.js
+backend/src/
+  app.js
+  server.js
+  config/
+  middleware/
+  utils/
+  services/
+  db/migrations/
+  db/seeds/
+  modules/
+    auth/
+    users/
+    courses/
+    enrolments/
+    assignments/
+    announcements/
+    schedules/
+    attendance/
+    biometrics/
+    devices/
+    notifications/
+    analytics/
 ```
 
-No ML service directory exists in the revised project.
+Versioned SQL migrations are applied with `npm run db:migrate`. Each file is applied
+transactionally and recorded in `schema_migrations`; an advisory lock prevents concurrent
+migration runners. The supported database baseline is PostgreSQL 16 or newer.
 
 ---
 
 ## 21. Frontend Structure
 
-Recommended React structure:
+The React application uses Vite, React Router and ES modules. Pages compose feature modules;
+feature APIs and hooks stay with their features. Shared HTTP transport lives in
+`src/services/api.js`. The root AGENTS.md directory layout is authoritative.
 
 ```text
-frontend/
-└── src/
-    ├── pages/
-    │   ├── LoginPage.jsx
-    │   ├── RegisterPage.jsx
-    │   │
-    │   ├── student/
-    │   │   ├── StudentDashboard.jsx
-    │   │   ├── StudentAssignments.jsx
-    │   │   ├── StudentCalendar.jsx
-    │   │   ├── StudentAttendance.jsx
-    │   │   ├── StudentCourses.jsx
-    │   │   └── StudentAnnouncements.jsx
-    │   │
-    │   ├── lecturer/
-    │   │   ├── LecturerDashboard.jsx
-    │   │   ├── LecturerCourses.jsx
-    │   │   ├── CourseDetails.jsx
-    │   │   ├── CourseAssignments.jsx
-    │   │   ├── CourseAnnouncements.jsx
-    │   │   ├── CourseSchedule.jsx
-    │   │   ├── AttendanceControl.jsx
-    │   │   └── CourseAnalytics.jsx
-    │   │
-    │   └── admin/
-    │       ├── AdminDashboard.jsx
-    │       ├── Devices.jsx
-    │       └── FingerprintEnrollment.jsx
-    │
-    ├── components/
-    │   ├── layout/
-    │   ├── assignments/
-    │   ├── attendance/
-    │   ├── courses/
-    │   ├── notifications/
-    │   └── common/
-    │
-    ├── context/
-    │   ├── AuthContext.jsx
-    │   └── NotificationContext.jsx
-    │
-    ├── hooks/
-    │   ├── useAuth.js
-    │   └── useNotifications.js
-    │
-    ├── services/
-    │   ├── api.js
-    │   ├── auth.api.js
-    │   ├── courses.api.js
-    │   ├── assignments.api.js
-    │   ├── attendance.api.js
-    │   └── notifications.api.js
-    │
-    └── App.jsx
+frontend/src/
+  App.jsx
+  main.jsx
+  routes/
+  config/
+  components/common/
+  components/layout/
+  components/ui/
+  context/
+  hooks/
+  services/
+  styles/
+  utils/
+  pages/student/
+  pages/lecturer/
+  pages/admin/
+  features/auth/
+  features/courses/
+  features/assignments/
+  features/announcements/
+  features/schedules/
+  features/attendance/
+  features/notifications/
+  features/biometrics/
 ```
+
+Authentication uses bearer JWTs, stored in sessionStorage for same-tab reloads with an
+in-memory fallback when storage is unavailable. AuthContext restores identity through
+`GET /api/auth/me`; an expired token returns to sign-in, while temporary network errors
+offer retry. Sign-out clears the browser token; already issued JWTs remain valid until
+expiry. The backend reloads the current user and role on authenticated requests.
 
 ---
 
