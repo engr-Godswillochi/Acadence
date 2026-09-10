@@ -21,7 +21,7 @@ export function CoursesPage() {
   }, [token, revision, logout]);
   const lecturer = user.role === 'LECTURER';
   return <section>
-    <div className="page-heading"><div><p className="eyebrow">Academic workspace</p><h1 className="page-title">Courses</h1></div>{lecturer && !creating && <button onClick={() => setCreating(true)}>New course</button>}</div>
+    <div className="page-heading"><div><p className="eyebrow">Academic workspace</p><h1 className="page-title">Courses</h1><p className="page-intro">{lecturer ? 'Create and manage the courses you teach.' : 'Your enrolled courses, coursework, and academic updates.'}</p></div>{lecturer && !creating && <button onClick={() => setCreating(true)}>New course</button>}</div>
     {creating && <CourseForm onCancel={() => setCreating(false)} onSave={async (input) => { await coursesApi.create(token, input); setCreating(false); setRevision((value) => value + 1); }} />}
     {error ? <div role="alert"><p>{error}</p><button onClick={() => { setError(''); setRevision((value) => value + 1); }}>Try again</button></div> : !courses ? <p role="status">Loading courses…</p> : !courses.length ? <p className="empty-state">{lecturer ? 'No courses yet. Create a course to begin.' : 'You are not enrolled in any courses yet. Your lecturer can enrol you using your account email.'}</p> :
       <ul className="course-list">{courses.map((course) => <li key={course.courseId}><Link to={`/courses/${course.courseId}`}><strong>{course.courseCode}</strong><span>{course.courseTitle}</span><small>{course.academicSession} · {course.semester === 'FIRST' ? 'First' : 'Second'} semester · {course.creditUnits} credits</small></Link></li>)}</ul>}
