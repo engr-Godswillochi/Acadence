@@ -12,7 +12,7 @@ export function AuthPage({ mode }) {
   const [details, setDetails] = useState([]);
   if (auth.status === 'authenticated') {
     const destination = location.state?.from;
-    return <Navigate replace to={destination?.startsWith('/') && !destination.startsWith('//') && !['/login', '/register'].includes(destination) ? destination : '/account'} />;
+    return <Navigate replace to={destination?.startsWith('/') && !destination.startsWith('//') && !['/login', '/register'].includes(destination) ? destination : '/dashboard'} />;
   }
 
   async function submit(event) {

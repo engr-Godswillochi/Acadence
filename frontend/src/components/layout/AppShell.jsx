@@ -16,6 +16,7 @@ export function AppShell() {
             <span>Acadence</span>
           </Link>
           {user && <nav className="main-nav" aria-label="Main navigation">
+            <NavLink className={navigationClass} to="/dashboard">Dashboard</NavLink>
             {user.role !== 'ADMIN' && <NavLink className={navigationClass} to="/courses">Courses</NavLink>}
             {user.role === 'STUDENT' && <>
               <NavLink className={navigationClass} to="/assignments">Assignments</NavLink>
