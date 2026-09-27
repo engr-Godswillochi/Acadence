@@ -9,16 +9,17 @@ Create a hosted PostgreSQL database in a region close to the backend function. U
 provider's pooled connection string when one is available; serverless deployments can create
 several short-lived application instances.
 
-From a trusted local terminal, run every migration against the production database before the
-first backend deployment and whenever a new migration is added:
+Production backend deployments run every pending migration automatically. To run the same
+migration command manually from a trusted local terminal:
 
 ```bash
 cd backend
-DATABASE_URL='postgresql://...' DATABASE_SSL=true npm run db:migrate
+DATABASE_URL='postgresql://...' MIGRATION_DATABASE_URL='postgresql://...' DATABASE_SSL=true npm run db:migrate
 ```
 
-Do not add migrations to Vercel's build command. Concurrent preview and production builds may
-otherwise attempt the same schema change.
+`MIGRATION_DATABASE_URL` should use Supabase's direct or session-pooler connection because
+migrations are session-oriented operations. The Vercel build hook uses a transaction-scoped
+database lock, records completed files, and skips preview builds.
 
 ## 2. Create the backend project
 
@@ -36,9 +37,10 @@ Add these Production and Preview environment variables:
 | Variable | Value |
 | --- | --- |
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | Hosted PostgreSQL pooled connection string |
+| `DATABASE_URL` | Supabase transaction-pooler connection string (port 6543) |
+| `MIGRATION_DATABASE_URL` | Supabase direct or session-pooler connection string (port 5432) |
 | `DATABASE_SSL` | `true` when required by the provider |
-| `DATABASE_POOL_MAX` | `3` |
+| `DATABASE_POOL_MAX` | `1` |
 | `FRONTEND_URLS` | Exact frontend origins, comma-separated |
 | `JWT_SECRET` | Unique random value of at least 32 characters |
 | `JWT_EXPIRES_IN` | `24h` |
@@ -47,6 +49,11 @@ Add these Production and Preview environment variables:
 Generate secrets locally, for example with `openssl rand -hex 32`. Keep the administrator
 registration secret out of the frontend environment: it should be entered only by the person
 authorized to provision administrators.
+
+The backend's Vercel build command runs `npm run db:migrate` automatically for production
+deployments. Preview builds skip migrations so they cannot change the production schema. The
+migration command takes a transaction-scoped advisory lock and applies only files that are not
+already recorded in `schema_migrations`.
 
 Deploy the backend and confirm that this returns a successful JSON response:
 

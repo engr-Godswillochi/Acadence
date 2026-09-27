@@ -64,7 +64,7 @@ export const env = Object.freeze({
   port: readPort(process.env.PORT),
   databaseUrl: process.env.DATABASE_URL?.trim(),
   databaseSsl: readBoolean(process.env.DATABASE_SSL, false, 'DATABASE_SSL'),
-  databasePoolMax: readPositiveInteger(process.env.DATABASE_POOL_MAX, nodeEnv === 'production' ? 3 : 10, 'DATABASE_POOL_MAX'),
+  databasePoolMax: readPositiveInteger(process.env.DATABASE_POOL_MAX, nodeEnv === 'production' ? 1 : 10, 'DATABASE_POOL_MAX'),
   frontendOrigins: readFrontendOrigins(),
   jwtSecret: process.env.JWT_SECRET?.trim(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '24h',

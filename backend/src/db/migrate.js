@@ -1,8 +1,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { closeDatabasePool, getDatabasePool } from '../config/database.js';
-import { validateDatabaseEnvironment } from '../config/env.js';
+import { createDatabasePool } from '../config/database.js';
+import { env, validateDatabaseEnvironment } from '../config/env.js';
 
 const migrationsDirectory = fileURLToPath(new URL('./migrations', import.meta.url));
 const migrationLockName = 'acadence_schema_migrations';
@@ -13,10 +13,15 @@ async function runMigrations() {
   const migrationFiles = (await readdir(migrationsDirectory))
     .filter((fileName) => fileName.endsWith('.sql'))
     .sort();
-  const client = await getDatabasePool().connect();
+  const migrationPool = createDatabasePool({
+    connectionString: process.env.MIGRATION_DATABASE_URL?.trim() || env.databaseUrl,
+    max: 1,
+  });
+  const client = await migrationPool.connect();
 
   try {
-    await client.query('SELECT pg_advisory_lock(hashtext($1))', [migrationLockName]);
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [migrationLockName]);
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         name VARCHAR(255) PRIMARY KEY,
@@ -36,29 +41,27 @@ async function runMigrations() {
 
       const sql = await readFile(new URL(`./migrations/${fileName}`, import.meta.url), 'utf8');
 
-      await client.query('BEGIN');
-      try {
-        await client.query(sql);
-        await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [fileName]);
-        await client.query('COMMIT');
-        console.info(`Applied migration ${fileName}.`);
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      }
+      await client.query(sql);
+      await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [fileName]);
+      console.info(`Applied migration ${fileName}.`);
     }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
   } finally {
-    try {
-      await client.query('SELECT pg_advisory_unlock(hashtext($1))', [migrationLockName]);
-    } finally {
-      client.release();
-    }
+    client.release();
+    await migrationPool.end();
   }
 }
 
-runMigrations()
-  .catch((error) => {
+const isVercelPreview = process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'production';
+
+if (isVercelPreview) {
+  console.info('Skipping database migrations for a non-production Vercel deployment.');
+} else {
+  runMigrations().catch((error) => {
     console.error('Database migration failed.', error);
     process.exitCode = 1;
-  })
-  .finally(closeDatabasePool);
+  });
+}

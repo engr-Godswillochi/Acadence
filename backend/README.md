@@ -45,7 +45,11 @@ creates the student/device/slot profile only after successful device confirmatio
 Create a Vercel project whose root directory is `backend`. The root `index.js` exports the
 Express application without opening a listening port, while local development continues to
 use `src/server.js`. Configure all variables from `.env.example`, use a pooled hosted
-PostgreSQL connection, and run `npm run db:migrate` against that database before deploying.
+PostgreSQL connection, and keep the automatic migration build step enabled.
+
+Production Vercel builds run pending migrations automatically. Set `MIGRATION_DATABASE_URL` to
+a Supabase direct or session-pooler URL for that build step; keep the transaction-pooler URL in
+`DATABASE_URL` for the deployed serverless API. Preview builds intentionally skip migrations.
 
 The API accepts browser requests only from the exact comma-separated origins in
 `FRONTEND_URLS`. See [`../docs/deployment/vercel.md`](../docs/deployment/vercel.md) for the

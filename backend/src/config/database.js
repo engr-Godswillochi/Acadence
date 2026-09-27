@@ -4,15 +4,15 @@ import { env } from './env.js';
 
 const { Pool } = pg;
 
-function createPool() {
-  if (!env.databaseUrl) {
+export function createDatabasePool({ connectionString = env.databaseUrl, max = env.databasePoolMax } = {}) {
+  if (!connectionString) {
     throw new Error('Cannot create the PostgreSQL pool without DATABASE_URL.');
   }
 
   return new Pool({
-    connectionString: env.databaseUrl,
+    connectionString,
     ssl: env.databaseSsl,
-    max: env.databasePoolMax,
+    max,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 10000,
     allowExitOnIdle: true,
@@ -22,7 +22,7 @@ function createPool() {
 let pool;
 
 export function getDatabasePool() {
-  pool ??= createPool();
+  pool ??= createDatabasePool();
   return pool;
 }
 
