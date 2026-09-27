@@ -63,3 +63,60 @@ test('schedule CRUD, merged range validation, access and persistent change notif
     await closeDatabasePool();
   }
 });
+
+test('a lecturer reads their own teaching week in weekday order, not their enrolments', { skip: !process.env.TEST_DATABASE_URL, timeout: 30000 }, async () => {
+  process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+  const { createApp } = await import('../src/app.js');
+  const { createAuthService } = await import('../src/modules/auth/auth.service.js');
+  const { createTokenService } = await import('../src/modules/auth/auth.token.js');
+  const { getDatabasePool, closeDatabasePool } = await import('../src/config/database.js');
+  const pool = getDatabasePool();
+  const users = [];
+  const courseId = randomUUID();
+  const tokens = createTokenService({ secret: 'teaching-schedule-integration-secret' });
+  const app = createApp({ authService: createAuthService({ tokens }) });
+  try {
+    for (const role of ['LECTURER', 'LECTURER', 'STUDENT']) {
+      const id = randomUUID();
+      await pool.query('INSERT INTO users (user_id,full_name,email,password_hash,role,matric_number) VALUES ($1,$2,$3,$4,$5,$6)', [id, 'Teaching Test', `${id}@example.test`, 'unused', role, role === 'STUDENT' ? id : null]);
+      users.push({ userId: id, role });
+    }
+    const [owner, other, student] = users;
+    const code = randomUUID().slice(0, 8).toUpperCase();
+    await pool.query("INSERT INTO courses (course_id,course_code,course_title,credit_units,lecturer_id,academic_session,semester) VALUES ($1,$2,'Teaching Week',3,$3,'2026/2027','FIRST')", [courseId, code, owner.userId]);
+    const call = (user, method, path) => request(app)[method](`/api${path}`).set('Authorization', `Bearer ${tokens.create(user)}`);
+    const path = `/courses/${courseId}/schedules`;
+    // Created out of order on purpose: the endpoint must return them Monday-first.
+    for (const input of [
+      { dayOfWeek: 'Wednesday', startTime: '14:00', endTime: '15:30', venue: 'Studio 2' },
+      { dayOfWeek: 'Monday', startTime: '09:00', endTime: '10:30', venue: 'Room 12' },
+      { dayOfWeek: 'Monday', startTime: '16:00', endTime: '17:00', venue: 'Lab 1' },
+    ]) assert.equal((await call(owner, 'post', path).send(input)).status, 201);
+
+    assert.equal((await request(app).get('/api/schedules/teaching')).status, 401);
+    assert.equal((await call(student, 'get', '/schedules/teaching')).status, 403);
+
+    const mine = await call(owner, 'get', '/schedules/teaching');
+    assert.equal(mine.status, 200);
+    assert.deepEqual(mine.body.data.schedules.map((item) => `${item.dayOfWeek} ${item.startTime}`), ['Monday 09:00', 'Monday 16:00', 'Wednesday 14:00']);
+    assert.equal(mine.body.data.schedules[0].courseCode, code);
+    assert.equal(mine.body.data.schedules[0].courseTitle, 'Teaching Week');
+    assert.equal(mine.body.data.schedules[0].venue, 'Room 12');
+
+    // Teaching a course is not the same as being enrolled in it.
+    assert.equal((await call(other, 'get', '/schedules/teaching')).body.data.schedules.length, 0);
+    await pool.query('INSERT INTO enrolments (course_id,student_id) VALUES ($1,$2)', [courseId, student.userId]);
+    assert.equal((await call(student, 'get', '/schedules/teaching')).status, 403);
+    assert.equal((await call(student, 'get', '/schedules/my')).body.data.schedules.length, 3);
+    assert.equal((await call(owner, 'get', '/schedules/teaching')).body.data.schedules.length, 3);
+
+    await pool.query('UPDATE courses SET archived_at=CURRENT_TIMESTAMP WHERE course_id=$1', [courseId]);
+    assert.equal((await call(owner, 'get', '/schedules/teaching')).body.data.schedules.length, 0);
+  } finally {
+    await pool.query('DELETE FROM schedules WHERE course_id=$1', [courseId]);
+    await pool.query('DELETE FROM enrolments WHERE course_id=$1', [courseId]);
+    await pool.query('DELETE FROM courses WHERE course_id=$1', [courseId]);
+    await pool.query('DELETE FROM users WHERE user_id=ANY($1::uuid[])', [users.map((user) => user.userId)]);
+    await closeDatabasePool();
+  }
+});

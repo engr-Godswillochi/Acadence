@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import { createApp } from '../src/app.js';
 import { createAuthService } from '../src/modules/auth/auth.service.js';
 import { createTokenService } from '../src/modules/auth/auth.token.js';
-import { registrationSchema } from '../src/modules/auth/auth.validation.js';
+import { adminRegistrationSchema, registrationSchema } from '../src/modules/auth/auth.validation.js';
 import { createAuthenticateUser } from '../src/middleware/auth.middleware.js';
 import { requireRole } from '../src/middleware/role.middleware.js';
 import { errorHandler } from '../src/middleware/error.middleware.js';
@@ -31,6 +31,65 @@ test('registration validates student identifiers, role and bcrypt byte length', 
   assert.equal(registrationSchema.safeParse({ ...input, matricNumber: undefined }).success, false);
   assert.equal(registrationSchema.safeParse({ ...input, role: 'ADMIN' }).success, false);
   assert.equal(registrationSchema.safeParse({ ...input, password: 'é'.repeat(37) }).success, false);
+});
+
+test('administrator registration accepts only email, password and a secret code', () => {
+  const input = { email: ' ADMIN@example.test ', password: 'password123', secretCode: 'private-code' };
+  assert.deepEqual(adminRegistrationSchema.parse(input), {
+    email: 'admin@example.test',
+    password: 'password123',
+    secretCode: 'private-code',
+  });
+  assert.equal(adminRegistrationSchema.safeParse({ ...input, role: 'ADMIN' }).success, false);
+});
+
+test('administrator registration rejects a wrong secret and creates an ADMIN without exposing it', async () => {
+  const createdUsers = [];
+  const service = createAuthService({
+    adminRegistrationSecret: 'correct-secret-code',
+    repository: {
+      async createUser(input) {
+        createdUsers.push(input);
+        return { ...input, userId: randomUUID() };
+      },
+    },
+    passwords: { hash: async (password) => `hashed:${password}` },
+    tokens: { create: () => 'admin-token' },
+  });
+
+  await assert.rejects(
+    service.registerAdmin({ email: 'admin@example.test', password: 'password123', secretCode: 'wrong-code' }),
+    (error) => error.statusCode === 403 && error.code === 'INVALID_ADMIN_SECRET',
+  );
+  assert.equal(createdUsers.length, 0);
+
+  const result = await service.registerAdmin({
+    email: 'admin@example.test',
+    password: 'password123',
+    secretCode: 'correct-secret-code',
+  });
+  assert.equal(createdUsers[0].role, 'ADMIN');
+  assert.equal(createdUsers[0].fullName, 'System Administrator');
+  assert.equal(createdUsers[0].secretCode, undefined);
+  assert.equal(result.user.passwordHash, undefined);
+  assert.equal(result.user.secretCode, undefined);
+  assert.equal(result.accessToken, 'admin-token');
+});
+
+test('administrator registration endpoint validates input and returns the created session', async () => {
+  const calls = [];
+  const session = { accessToken: 'admin-token', user: { email: 'admin@example.test', role: 'ADMIN' } };
+  const app = createApp({ authService: { registerAdmin: async (input) => { calls.push(input); return session; } } });
+  const invalid = await request(app).post('/api/auth/admin/register').send({ email: 'not-an-email' });
+  assert.equal(invalid.status, 400);
+  assert.equal(invalid.body.error.code, 'VALIDATION_ERROR');
+  assert.equal(calls.length, 0);
+
+  const input = { email: 'admin@example.test', password: 'password123', secretCode: 'private-code' };
+  const created = await request(app).post('/api/auth/admin/register').send(input);
+  assert.equal(created.status, 201);
+  assert.deepEqual(created.body.data, session);
+  assert.deepEqual(calls, [input]);
 });
 
 test('authentication rejects missing/device tokens and authorization uses current database role', async () => {

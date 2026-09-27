@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 export function AnnouncementForm({ initial = {}, save, cancel }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -10,5 +11,5 @@ export function AnnouncementForm({ initial = {}, save, cancel }) {
     catch (failure) { setError(failure.message); }
     finally { setBusy(false); }
   }
-  return <form className="course-form" onSubmit={submit}><h3>{initial.announcementId ? 'Edit announcement' : 'New announcement'}</h3>{error && <p role="alert">{error}</p>}<fieldset disabled={busy}><label>Title<input name="title" required maxLength={160} defaultValue={initial.title} /></label><label>Message<textarea name="message" required maxLength={10000} rows={5} defaultValue={initial.message} /></label><div className="actions"><button type="submit">Publish announcement</button><button type="button" className="secondary" onClick={cancel}>Cancel</button></div></fieldset></form>;
+  return <form className="announcement-form" onSubmit={submit}>{error && <p role="alert">{error}</p>}<fieldset disabled={busy}><label>Announcement title<input name="title" required maxLength={160} defaultValue={initial.title} /></label><label>Message<textarea name="message" required maxLength={10000} rows={6} defaultValue={initial.message} /></label><div className="actions"><button type="submit">{busy ? 'Saving…' : initial.announcementId ? 'Save changes' : 'Publish announcement'}</button><button type="button" className="secondary" onClick={cancel}>Cancel</button></div></fieldset></form>;
 }

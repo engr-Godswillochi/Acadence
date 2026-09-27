@@ -12,7 +12,7 @@ export function ScheduleForm({ initial = {}, save, cancel }) {
     setBusy(true);
     try { await save(values); } catch (failure) { setError(failure.message); } finally { setBusy(false); }
   }
-  return <form className="course-form" onSubmit={submit}>
+  return <form className="schedule-form" onSubmit={submit}>
     <label>Day<select name="dayOfWeek" value={values.dayOfWeek} onChange={change}>{weekdays.map((day) => <option key={day}>{day}</option>)}</select></label>
     <label>Start time<input required type="time" name="startTime" value={values.startTime} onChange={change} /></label>
     <label>End time<input required type="time" name="endTime" value={values.endTime} onChange={change} /></label>

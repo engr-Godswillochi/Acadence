@@ -24,3 +24,9 @@ export const registrationSchema = z.object({
 });
 
 export const loginSchema = z.object({ email, password }).strict();
+
+export const adminRegistrationSchema = z.object({
+  email,
+  password,
+  secretCode: z.string().min(1, 'Enter the administrator secret code.').max(256),
+}).strict();

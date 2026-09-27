@@ -12,6 +12,7 @@ export function createScheduleRouter(authService) {
   router.get('/courses/:courseId/schedules', auth, requireRole('LECTURER', 'STUDENT'), validateIds('courseId'), controller.listCourse);
   router.post('/courses/:courseId/schedules', auth, requireRole('LECTURER'), validateIds('courseId'), validateBody(scheduleSchema), controller.create);
   router.get('/schedules/my', auth, requireRole('STUDENT'), controller.my);
+  router.get('/schedules/teaching', auth, requireRole('LECTURER'), controller.teaching);
   router.patch('/schedules/:id', auth, requireRole('LECTURER'), validateIds('id'), validateBody(scheduleUpdateSchema), controller.update);
   router.delete('/schedules/:id', auth, requireRole('LECTURER'), validateIds('id'), controller.remove);
   return router;

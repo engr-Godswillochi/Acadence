@@ -61,6 +61,7 @@ export function AuthProvider({ children }) {
     token, user, status, error, logout,
     login: (input) => authenticate('login', input),
     register: (input) => authenticate('register', input),
+    registerAdmin: (input) => authenticate('registerAdmin', input),
     retry: () => { setStatus('loading'); setError(''); setRetry((value) => value + 1); },
   }}>{children}</AuthContext.Provider>;
 }

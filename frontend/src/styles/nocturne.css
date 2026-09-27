@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
+
+:root {
+  --ink: #eef0f6;
+  --ink-soft: #c7cada;
+  --midnight: #10131d;
+  --canvas: #171b27;
+  --surface: #202635;
+  --surface-soft: #292f40;
+  --line: #384057;
+  --line-dark: #53607c;
+  --muted: #aeb5c8;
+  --cobalt: #8d91ff;
+  --cobalt-deep: #b6b8ff;
+  --cobalt-pale: #2d3155;
+  --plum: #29233a;
+  --mango: #c5c8ff;
+  --paper: var(--canvas);
+  --display: 'EB Garamond', Georgia, serif;
+  --body: 'Satoshi', ui-sans-serif, sans-serif;
+  --shadow-float: 0 18px 46px rgba(0, 0, 0, .24);
+  font-family: var(--body);
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+html, body, .app-shell, .page-content { background: var(--canvas); color: var(--ink); }
+h1, h2, h3, .brand { font-family: var(--display); letter-spacing: -.025em; }
+h1 { font-weight: 600; }
+button, .button-link, input, select, textarea, .nav-link { font-family: var(--body); }
+p { font-size: 1rem; line-height: 1.68; }
+a { color: var(--cobalt-deep); }
+input, select, textarea { color: var(--ink); background: #1a1f2d; border-color: var(--line); }
+button, .button-link { color: #121522; background: var(--cobalt); border-color: var(--cobalt); box-shadow: none; }
+button:hover:not(:disabled), .button-link:hover { color: #121522; background: var(--cobalt-deep); }
+.secondary { color: var(--ink); background: transparent; border-color: var(--line-dark); }
+
+/* Stable centered canvas: the rail overlays from the edge and never moves work. */
+.authenticated-shell { padding-left: 76px; background: var(--canvas); }
+.authenticated-shell .site-header { width: 76px; overflow: visible; background: transparent; transition: width 220ms ease; z-index: 20; }
+.authenticated-shell .site-header::before { position: absolute; inset: 0; width: 76px; content: ''; background: #111622; border-right: 1px solid #30384d; transition: width 220ms ease, box-shadow 220ms ease; }
+.authenticated-shell .site-header:hover { width: 256px; }
+.authenticated-shell .site-header:hover::before { width: 256px; box-shadow: 20px 0 36px rgba(0,0,0,.22); }
+.header-inner { position: relative; width: 256px; padding: 18px 14px; }
+.brand { width: 48px; min-height: 48px; padding: 0; gap: 14px; overflow: hidden; color: var(--ink); font-size: 1.45rem; white-space: nowrap; }
+.brand-mark { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; color: #121522; background: var(--cobalt); }
+.main-nav { margin-top: 42px; gap: 8px; width: 48px; }
+.nav-link { width: 48px; min-height: 48px; justify-content: flex-start; gap: 16px; padding: 12px; overflow: hidden; border-radius: 0; color: #aeb5c8; white-space: nowrap; transition: width 220ms ease, color 160ms ease, background-color 160ms ease; }
+.nav-link svg { width: 24px; height: 24px; flex: 0 0 24px; color: currentColor; }
+.site-header:hover .brand, .site-header:hover .main-nav, .site-header:hover .nav-link { width: 228px; }
+.nav-link:hover { color: var(--ink); background: #1e2534; }
+.nav-link.is-active { color: var(--cobalt-deep); background: #242b3c; font-weight: 700; }
+.notification-count { margin-left: auto; color: #121522; background: var(--cobalt); }
+.account-link { width: 48px; margin: auto 0 0; padding: 16px 6px 0; border-top-color: #30384d; overflow: hidden; white-space: nowrap; transition: width 220ms ease; }
+.site-header:hover .account-link { width: 228px; }
+.account-initial { flex: 0 0 36px; color: #121522; background: #d9dcff; }
+.account-link-text { opacity: 0; transition: opacity 140ms ease; }
+.site-header:hover .account-link-text { opacity: 1; }
+.page-content { min-height: 100vh; padding: clamp(48px, 6vw, 96px) clamp(24px, 5vw, 88px); }
+.page-content > section { max-width: 1040px; margin-inline: auto; }
+
+/* Structure and dark surfaces. */
+.page-heading, .course-directory-heading, .assignments-heading, .attendance-heading, .notifications-heading, .calendar-heading, .student-workspace-header, .desk-heading, .course-workspace-heading { border-color: var(--line); }
+.page-heading h1, .course-directory-heading h1, .assignments-heading h1, .attendance-heading h1, .notifications-heading h1, .calendar-heading h1, .student-workspace-header h1, .desk-heading h1, .course-title-copy h1 { color: var(--ink); font-family: var(--display); font-size: clamp(3rem, 5vw, 5.8rem); }
+.student-workspace-header p, .desk-heading > div > p:last-child, .course-title-copy dd, .course-title-copy dt { color: var(--muted); }
+.deadline-note, .week-links, .attendance-standing, .attendance-history, .course-form, .enrolment-panel, .assignment-form, .schedule-form, .announcement-form, .account-card { background: var(--surface); border-color: var(--line); box-shadow: none; }
+.deadline-note { background: var(--plum); }
+.student-snapshot, .student-snapshot > div, .today-agenda header, .course-register header, .course-register li a, .course-navigation, .course-workspace-section-heading { border-color: var(--line); }
+.student-snapshot dd, .course-register li strong, .today-agenda li strong { color: var(--ink); }
+
+/* Tabs are a clear control group, not a line with links on it. */
+.course-navigation { display: inline-flex; width: auto; gap: 4px; margin: 0; padding: 5px; border: 1px solid var(--line); border-radius: 12px; background: #1b202e; }
+.course-navigation a, .course-workspace-page .course-navigation a { min-height: 42px; padding: 10px 16px; border: 0; border-radius: 8px; color: var(--muted); font-size: .94rem; }
+.course-navigation a:hover { color: var(--ink); background: #292f40; }
+.course-navigation a[aria-current] { color: #151925; background: var(--cobalt); font-weight: 700; }
+.course-workspace { padding-top: 44px; }
+
+@media (max-width: 760px) {
+  .authenticated-shell { padding-left: 0; }
+  .authenticated-shell .site-header, .authenticated-shell .site-header:hover { width: 100%; background: #111622; }
+  .authenticated-shell .site-header::before { display: none; }
+  .header-inner { width: 100%; }
+  .brand, .site-header:hover .brand { width: auto; }
+  .main-nav, .site-header:hover .main-nav { width: auto; }
+  .nav-link, .site-header:hover .nav-link { width: auto; }
+  .account-link, .site-header:hover .account-link { width: auto; }
+  .account-link-text { opacity: 1; }
+  .page-content { padding: 40px 24px 64px; }
+  .course-navigation { width: 100%; overflow-x: auto; }
+  .course-navigation a, .course-workspace-page .course-navigation a { flex: 0 0 auto; }
+}

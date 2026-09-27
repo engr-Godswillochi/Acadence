@@ -10,6 +10,10 @@ export const courseRepository = {
     const result = await getDatabasePool().query(`SELECT ${columns} FROM courses c WHERE c.archived_at IS NULL AND ${condition} ORDER BY c.course_code, c.academic_session DESC`, [user.userId]);
     return result.rows;
   },
+  async listArchived(lecturerId) {
+    const result = await getDatabasePool().query(`SELECT ${columns} FROM courses c WHERE c.archived_at IS NOT NULL AND c.lecturer_id = $1 ORDER BY c.archived_at DESC, c.course_code`, [lecturerId]);
+    return result.rows;
+  },
   async find(id, client = getDatabasePool(), lock = false) {
     const result = await client.query(`SELECT ${columns} FROM courses c WHERE c.course_id = $1 ${lock ? 'FOR UPDATE' : ''}`, [id]);
     return result.rows[0];
@@ -24,5 +28,9 @@ export const courseRepository = {
   },
   async archive(id, client) {
     await client.query('UPDATE courses SET archived_at = CURRENT_TIMESTAMP WHERE course_id = $1', [id]);
+  },
+  async unarchive(id, client) {
+    const result = await client.query(`UPDATE courses AS c SET archived_at = NULL WHERE course_id = $1 RETURNING ${columns}`, [id]);
+    return result.rows[0];
   },
 };

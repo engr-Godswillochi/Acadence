@@ -51,6 +51,16 @@ test('announcement notification persistence, stream delivery, ownership and roll
     assert.equal((await call(student, 'get', '/announcements/my')).body.data.announcements.length, 1);
     assert.equal((await call(outsider, 'get', `/courses/${courseId}/announcements`)).status, 403);
     const announcementId = created.body.data.announcement.announcementId;
+    assert.equal((await call(owner, 'post', `/announcements/${announcementId}/dismiss`)).status, 403);
+    assert.equal((await call(outsider, 'post', `/announcements/${announcementId}/dismiss`)).status, 403);
+    assert.equal((await call(student, 'post', `/announcements/${announcementId}/dismiss`)).status, 200);
+    assert.equal((await call(student, 'get', '/announcements/my')).body.data.announcements.length, 0);
+    assert.equal((await call(student, 'get', `/courses/${courseId}/announcements`)).body.data.announcements.length, 0);
+    assert.equal((await call(student, 'get', '/announcements/my/hidden')).body.data.announcements.length, 1);
+    assert.equal((await call(owner, 'get', '/announcements/my/hidden')).status, 403);
+    assert.equal((await call(student, 'delete', `/announcements/${announcementId}/dismiss`)).status, 200);
+    assert.equal((await call(student, 'get', '/announcements/my')).body.data.announcements.length, 1);
+    assert.equal((await call(student, 'get', '/announcements/my/hidden')).body.data.announcements.length, 0);
     assert.equal((await call(student, 'patch', `/announcements/${announcementId}`).send({ title: 'Hijack' })).status, 403);
     assert.equal((await call(owner, 'patch', `/announcements/${announcementId}`).send({ message: 'Meet in room 5.' })).status, 200);
     assert.equal((await call(student, 'get', '/notifications')).body.data.unreadCount, 1);

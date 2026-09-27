@@ -5,7 +5,7 @@ import { validateIds } from '../../middleware/params.middleware.js';
 import { validateBody } from '../../middleware/validate.middleware.js';
 import { authenticateDevice } from '../devices/device.auth.js';
 import { attendanceController as controller } from './attendance.controller.js';
-import { attendanceSchema, openSessionSchema } from './attendance.validation.js';
+import { attendanceSchema, heartbeatSchema, openSessionSchema } from './attendance.validation.js';
 
 export function createAttendanceRouter(authService) {
   const router = Router();
@@ -21,6 +21,6 @@ export function createAttendanceRouter(authService) {
   router.get('/attendance/my/summary', auth, requireRole('STUDENT'), controller.summary);
   router.get('/device/session/active', authenticateDevice, controller.active);
   router.post('/device/attendance', authenticateDevice, validateBody(attendanceSchema), controller.submit);
-  router.post('/device/heartbeat', authenticateDevice, controller.heartbeat);
+  router.post('/device/heartbeat', authenticateDevice, validateBody(heartbeatSchema), controller.heartbeat);
   return router;
 }

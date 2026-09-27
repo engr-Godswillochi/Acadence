@@ -12,6 +12,9 @@ export function createAnnouncementRouter(authService) {
   router.get('/courses/:courseId/announcements', auth, requireRole('LECTURER', 'STUDENT'), validateIds('courseId'), controller.listCourse);
   router.post('/courses/:courseId/announcements', auth, requireRole('LECTURER'), validateIds('courseId'), validateBody(announcementSchema), controller.create);
   router.get('/announcements/my', auth, requireRole('STUDENT'), controller.my);
+  router.get('/announcements/my/hidden', auth, requireRole('STUDENT'), controller.hidden);
+  router.post('/announcements/:id/dismiss', auth, requireRole('STUDENT'), validateIds('id'), controller.dismiss);
+  router.delete('/announcements/:id/dismiss', auth, requireRole('STUDENT'), validateIds('id'), controller.restore);
   router.patch('/announcements/:id', auth, requireRole('LECTURER'), validateIds('id'), validateBody(announcementUpdateSchema), controller.update);
   router.delete('/announcements/:id', auth, requireRole('LECTURER'), validateIds('id'), controller.remove);
   return router;

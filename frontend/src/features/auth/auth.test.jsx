@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../../context/AuthContext.jsx';
 import { AuthPage } from '../../pages/AuthPage.jsx';
+import { AdminRegisterPage } from '../../pages/AdminRegisterPage.jsx';
 import { AccountPage } from '../../pages/AccountPage.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 
@@ -13,6 +14,8 @@ function mount(path = '/account') {
   return render(<MemoryRouter initialEntries={[path]}><AuthProvider><Routes>
     <Route path="/login" element={<AuthPage mode="login" />} />
     <Route path="/register" element={<AuthPage mode="register" />} />
+    <Route path="/admin/register" element={<AdminRegisterPage />} />
+    <Route path="/dashboard" element={<h1>Administrator dashboard</h1>} />
     <Route element={<ProtectedRoute />}><Route path="/account" element={<AccountPage />} /></Route>
   </Routes></AuthProvider></MemoryRouter>);
 }
@@ -67,4 +70,26 @@ test('registration exposes only student and lecturer roles with the matching ide
   await userEvent.selectOptions(screen.getByLabelText('Role'), 'LECTURER');
   expect(screen.queryByLabelText('Matric number')).toBeNull();
   expect(screen.getByLabelText('Staff number (optional)')).toBeTruthy();
+});
+
+test('administrator registration sends only email, password and secret code', async () => {
+  const admin = { fullName: 'System Administrator', role: 'ADMIN', email: 'admin@example.test' };
+  const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ accessToken: 'admin-token', user: admin }));
+  mount('/admin/register');
+
+  expect(screen.queryByLabelText('Full name')).toBeNull();
+  expect(screen.queryByLabelText('Role')).toBeNull();
+  await userEvent.type(screen.getByLabelText('Email address'), admin.email);
+  await userEvent.type(screen.getByLabelText('Password'), 'password123');
+  await userEvent.type(screen.getByLabelText('Secret code'), 'private-admin-code');
+  await userEvent.click(screen.getByRole('button', { name: 'Create administrator' }));
+
+  expect(await screen.findByRole('heading', { name: 'Administrator dashboard' })).toBeTruthy();
+  const [, options] = fetchMock.mock.calls[0];
+  expect(JSON.parse(options.body)).toEqual({
+    email: admin.email,
+    password: 'password123',
+    secretCode: 'private-admin-code',
+  });
+  expect(sessionStorage.getItem('acadence.accessToken')).toBe('admin-token');
 });

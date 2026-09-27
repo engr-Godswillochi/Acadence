@@ -1,18 +1,45 @@
 import { useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { BookOpen, CalendarDays, Fingerprint } from 'lucide-react';
 import { useAuth } from '../features/auth/useAuth.js';
 
 export function AuthPage({ mode }) {
   const registering = mode === 'register';
   const auth = useAuth();
   const location = useLocation();
-  const [role, setRole] = useState('STUDENT');
+  const [searchParams] = useSearchParams();
+  const requestedRole = searchParams.get('role');
+  const [role, setRole] = useState(requestedRole === 'LECTURER' ? 'LECTURER' : 'STUDENT');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [details, setDetails] = useState([]);
+  const stateDestination = location.state?.from;
+  const queryDestination = searchParams.get('redirect');
+  const requestedDestination = stateDestination || queryDestination;
+  const destination = typeof requestedDestination === 'string'
+    && requestedDestination.startsWith('/')
+    && !requestedDestination.startsWith('//')
+    && !['/login', '/register'].includes(requestedDestination.split(/[?#]/)[0])
+    ? requestedDestination
+    : null;
+
+  function switchHref(targetMode) {
+    const params = new URLSearchParams();
+    if (destination) params.set('redirect', destination);
+    if (targetMode === 'register') {
+      const nextRole = requestedRole === 'LECTURER'
+        ? 'LECTURER'
+        : destination?.startsWith('/enrol/')
+          ? 'STUDENT'
+          : null;
+      if (nextRole) params.set('role', nextRole);
+    }
+    const query = params.toString();
+    return `/${targetMode}${query ? `?${query}` : ''}`;
+  }
+
   if (auth.status === 'authenticated') {
-    const destination = location.state?.from;
-    return <Navigate replace to={destination?.startsWith('/') && !destination.startsWith('//') && !['/login', '/register'].includes(destination) ? destination : '/dashboard'} />;
+    return <Navigate replace to={destination || '/dashboard'} />;
   }
 
   async function submit(event) {
@@ -34,8 +61,8 @@ export function AuthPage({ mode }) {
   }
 
   return <section className="auth-layout">
-    <div className="auth-introduction"><p className="eyebrow">Acadence academic workspace</p><h1>Make room for focused academic work.</h1><p>Courses, deadlines, announcements, schedules, and attendance in one calm, dependable place.</p><div className="auth-points"><span>Coursework in context</span><span>Clear weekly planning</span><span>Personal progress records</span></div></div>
-    <div className="auth-panel"><p className="eyebrow">{registering ? 'Join Acadence' : 'Sign in to your workspace'}</p><h2>{registering ? 'Create your account' : 'Welcome back'}</h2><p className="auth-lead">{registering ? 'Enter your academic details to set up your workspace.' : 'Use your academic email to access your workspace.'}</p>
+    <div className="auth-introduction"><h1>Your academic day, together.</h1><p>Know what’s due, where to be, and how you’re doing. All your academic essentials, in Acadence.</p><div className="auth-points"><span><BookOpen size={17} aria-hidden="true" />Courses & assignments</span><span><CalendarDays size={17} aria-hidden="true" />Your weekly timetable</span><span><Fingerprint size={17} aria-hidden="true" />Attendance records</span></div></div>
+    <div className="auth-panel"><h2>{registering ? 'Create your account' : 'Welcome back'}</h2><p className="auth-lead">{registering ? 'A few details, then you’re ready to begin.' : 'Sign in to pick up where you left off.'}</p>
       {error && <div role="alert" className="form-error"><p>{error}</p>{details.length > 0 && <ul>{details.map((detail, index) => <li key={index}>{detail.field}: {detail.message}</li>)}</ul>}</div>}
       <form onSubmit={submit}>
         <fieldset disabled={busy}>
@@ -46,11 +73,11 @@ export function AuthPage({ mode }) {
           </>}
           <label>Email address<input name="email" type="email" autoComplete="email" required maxLength={254} /></label>
           <label>Password<input name="password" type="password" autoComplete={registering ? 'new-password' : 'current-password'} required minLength={8} aria-describedby={registering ? 'password-hint' : undefined} /></label>
-          {registering && <p id="password-hint" className="form-hint">Use at least 8 characters, up to 72 bytes.</p>}
+          {registering && <p id="password-hint" className="form-hint">Use at least 8 characters.</p>}
           <button className="button-full" type="submit">{busy ? 'Please wait…' : registering ? 'Create account' : 'Sign in'}</button>
         </fieldset>
       </form>
-      <p className="auth-switch">{registering ? 'Already registered?' : 'New to Acadence?'} <Link to={registering ? '/login' : '/register'}>{registering ? 'Sign in' : 'Create an account'}</Link></p>
+      <p className="auth-switch">{registering ? 'Already registered?' : 'New to Acadence?'} <Link to={switchHref(registering ? 'login' : 'register')}>{registering ? 'Sign in' : 'Create an account'}</Link></p>
     </div>
   </section>;
 }

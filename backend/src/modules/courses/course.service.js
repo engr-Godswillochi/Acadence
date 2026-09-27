@@ -10,6 +10,13 @@ export async function requireCourseOwner(user, id, client) {
   return course;
 }
 
+async function requireArchivedCourseOwner(user, id, client) {
+  const course = await courses.find(id, client, Boolean(client));
+  if (!course || !course.archivedAt) throw new ApiError(404, 'ARCHIVED_COURSE_NOT_FOUND', 'Archived course not found.');
+  if (user.role !== 'LECTURER' || course.lecturerId !== user.userId) throw new ApiError(403, 'FORBIDDEN', 'You do not manage this course.');
+  return course;
+}
+
 async function mapConflict(work) {
   try { return await work(); }
   catch (error) {
@@ -20,6 +27,7 @@ async function mapConflict(work) {
 
 export const courseService = {
   list: (user) => courses.list(user),
+  listArchived: (user) => courses.listArchived(user.userId),
   create: (user, data) => mapConflict(() => courses.create(user.userId, data)),
   async get(user, id) {
     const course = await courses.find(id);
@@ -35,5 +43,9 @@ export const courseService = {
   archive: (user, id) => withTransaction(async (client) => {
     await requireCourseOwner(user, id, client);
     await courses.archive(id, client);
+  }),
+  unarchive: (user, id) => withTransaction(async (client) => {
+    await requireArchivedCourseOwner(user, id, client);
+    return courses.unarchive(id, client);
   }),
 };

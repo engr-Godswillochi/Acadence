@@ -11,8 +11,9 @@ async function find(id, client) {
   return item;
 }
 export const announcementService = {
-  async listCourse(user, courseId) { await courseService.get(user, courseId); return announcements.listCourse(courseId); },
+  async listCourse(user, courseId) { await courseService.get(user, courseId); return announcements.listCourse(courseId, user.role === 'STUDENT' ? user.userId : null); },
   my: (user) => announcements.my(user.userId),
+  hidden: (user) => announcements.hidden(user.userId),
   create: (user, courseId, data) => withNotifications(async (client, emit) => {
     await requireCourseOwner(user, courseId, client);
     const item = await announcements.create(client, courseId, user.userId, data);
@@ -29,4 +30,14 @@ export const announcementService = {
   remove: (user, id) => withTransaction(async (client) => {
     const item = await find(id, client); await requireCourseOwner(user, item.courseId, client); await find(id, client); await announcements.remove(client, id);
   }),
+  async dismiss(user, id) {
+    const item = await find(id);
+    await courseService.get(user, item.courseId);
+    await announcements.dismiss(id, user.userId);
+  },
+  async restore(user, id) {
+    const item = await find(id);
+    await courseService.get(user, item.courseId);
+    await announcements.restore(id, user.userId);
+  },
 };

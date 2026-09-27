@@ -24,6 +24,9 @@ test('attendance accepts only mapped scans for active session roster and freezes
     await pool.query('INSERT INTO biometric_profiles (student_id,device_id,sensor_slot_id) VALUES ($1,$2,10),($3,$2,11)', [student.userId, devices[0], outsider.userId]);
     const user = (account, method, path) => request(app)[method](`/api${path}`).set('Authorization', `Bearer ${tokens.create(account)}`);
     const device = (index, method, path) => request(app)[method](`/api${path}`).set('X-Device-Key', keys[index]);
+    for (let index = 0; index < devices.length; index += 1) {
+      assert.equal((await device(index, 'post', '/device/heartbeat').send({ mode: 'IDLE', firmwareVersion: 'test', sensorReady: true, sensorCapacity: 162 })).status, 200);
+    }
     const path = `/courses/${courseId}/attendance-sessions`;
     assert.equal((await user(student, 'post', path).send({ deviceId: devices[0] })).status, 403);
     assert.equal((await user(other, 'post', path).send({ deviceId: devices[0] })).status, 403);
@@ -47,12 +50,13 @@ test('attendance accepts only mapped scans for active session roster and freezes
     const summary = await user(student, 'get', '/attendance/my/summary'); assert.deepEqual(summary.body.data.summaries[0], { courseId, courseCode: summary.body.data.summaries[0].courseCode, eligibleSessions: 1, attendedSessions: 1, percentage: 100 });
     assert.equal((await user(student, 'get', '/attendance/my')).body.data.attendance[0].recordedAt !== null, true);
     assert.equal((await user(outsider, 'get', '/attendance/my/summary')).body.data.summaries.length, 0);
-    assert.equal((await device(0, 'post', '/device/heartbeat')).status, 200);
+    assert.equal((await device(0, 'post', '/device/heartbeat').send({ mode: 'IDLE', firmwareVersion: 'test', sensorReady: true, sensorCapacity: 162 })).status, 200);
     assert.equal((await pool.query('SELECT last_seen_at FROM biometric_devices WHERE device_id=$1', [devices[0]])).rows[0].last_seen_at !== null, true);
   } finally {
     await pool.query('DELETE FROM attendance_records WHERE session_id IN (SELECT session_id FROM attendance_sessions WHERE course_id=$1)', [courseId]);
     await pool.query('DELETE FROM attendance_session_students WHERE session_id IN (SELECT session_id FROM attendance_sessions WHERE course_id=$1)', [courseId]);
     await pool.query('DELETE FROM attendance_sessions WHERE course_id=$1', [courseId]);
+    await pool.query('DELETE FROM biometric_enrollment_jobs WHERE device_id=ANY($1::uuid[])', [devices]);
     await pool.query('DELETE FROM biometric_profiles WHERE device_id=ANY($1::uuid[])', [devices]);
     await pool.query('DELETE FROM biometric_devices WHERE device_id=ANY($1::uuid[])', [devices]);
     await pool.query('DELETE FROM enrolments WHERE course_id=$1', [courseId]); await pool.query('DELETE FROM courses WHERE course_id=$1', [courseId]);

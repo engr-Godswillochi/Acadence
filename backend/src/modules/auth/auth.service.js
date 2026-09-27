@@ -1,9 +1,22 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
+import { env } from '../../config/env.js';
 import { ApiError } from '../../utils/apiError.js';
 import { authRepository } from './auth.repository.js';
 import { passwordService } from './auth.password.js';
 import { tokenService } from './auth.token.js';
 
-export function createAuthService({ repository = authRepository, passwords = passwordService, tokens = tokenService } = {}) {
+function secretsMatch(received, expected) {
+  const receivedDigest = createHash('sha256').update(received).digest();
+  const expectedDigest = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(receivedDigest, expectedDigest);
+}
+
+export function createAuthService({
+  repository = authRepository,
+  passwords = passwordService,
+  tokens = tokenService,
+  adminRegistrationSecret = env.adminRegistrationSecret,
+} = {}) {
   let dummyHash;
   function session(user) {
     const publicUser = { ...user };
@@ -11,21 +24,39 @@ export function createAuthService({ repository = authRepository, passwords = pas
     return { accessToken: tokens.create(publicUser), user: publicUser };
   }
 
+  async function createAccount(input) {
+    const passwordHash = await passwords.hash(input.password);
+    try {
+      const user = await repository.createUser({ ...input, passwordHash });
+      return session(user);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ApiError(409, 'ACCOUNT_ALREADY_EXISTS', 'An account with these details already exists.');
+      }
+      throw error;
+    }
+  }
+
   return {
     async register(input) {
       if (!['STUDENT', 'LECTURER'].includes(input.role)) {
         throw new ApiError(403, 'FORBIDDEN', 'This role cannot register publicly.');
       }
-      const passwordHash = await passwords.hash(input.password);
-      try {
-        const user = await repository.createUser({ ...input, passwordHash });
-        return session(user);
-      } catch (error) {
-        if (error.code === '23505') {
-          throw new ApiError(409, 'ACCOUNT_ALREADY_EXISTS', 'An account with these details already exists.');
-        }
-        throw error;
+      return createAccount(input);
+    },
+    async registerAdmin({ email, password, secretCode }) {
+      if (!adminRegistrationSecret) {
+        throw new ApiError(503, 'ADMIN_REGISTRATION_DISABLED', 'Administrator registration is not configured.');
       }
+      if (!secretsMatch(secretCode, adminRegistrationSecret)) {
+        throw new ApiError(403, 'INVALID_ADMIN_SECRET', 'The administrator secret code is invalid.');
+      }
+      return createAccount({
+        fullName: 'System Administrator',
+        email,
+        password,
+        role: 'ADMIN',
+      });
     },
     async login({ email, password }) {
       const user = await repository.findUserByEmail(email);

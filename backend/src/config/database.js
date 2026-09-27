@@ -12,7 +12,10 @@ function createPool() {
   return new Pool({
     connectionString: env.databaseUrl,
     ssl: env.databaseSsl,
+    max: env.databasePoolMax,
     connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    allowExitOnIdle: true,
   });
 }
 

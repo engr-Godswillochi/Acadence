@@ -1,9 +1,9 @@
+import { academicTimeZone, dateKeyFrom } from '../../utils/date.js';
+
 export const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-export const calendarTimezone = 'Africa/Lagos';
+export const calendarTimezone = academicTimeZone;
 export function localDateKey(value) {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: calendarTimezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(value));
-  const part = (type) => parts.find((item) => item.type === type).value;
-  return `${part('year')}-${part('month')}-${part('day')}`;
+  return dateKeyFrom(value);
 }
 export function weekDates(dateKey) {
   // UTC arithmetic operates on calendar dates, not the browser's local timezone.

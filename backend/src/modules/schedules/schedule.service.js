@@ -21,6 +21,7 @@ async function notify(client, emit, item, action) {
 export const scheduleService = {
   async listCourse(user, id) { await courseService.get(user, id); return schedules.listCourse(id); },
   my: (user) => schedules.my(user.userId),
+  teaching: (user) => schedules.teaching(user.userId),
   create: (user, courseId, data) => withNotifications(async (client, emit) => {
     await requireCourseOwner(user, courseId, client);
     validateRange(data);

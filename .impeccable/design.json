@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T10:30:00Z",
+  "title": "Design System: Acadence — Campus Wayfinding",
+  "extensions": {
+    "colorMeta": {
+      "campus-blue": { "role": "primary", "displayName": "Campus cobalt", "canonical": "#2146c7", "tonalRamp": ["#f4f7ff", "#e9efff", "#9fb2ee", "#2146c7", "#173b99"] },
+      "ink": { "role": "neutral", "displayName": "Campus ink", "canonical": "#14213d", "tonalRamp": ["#f8fafc", "#d8e0eb", "#68758c", "#3f4d67", "#14213d"] },
+      "canvas": { "role": "neutral", "displayName": "Cool canvas", "canonical": "#edf2f8", "tonalRamp": ["#ffffff", "#f7f9fc", "#edf2f8", "#d8e0eb", "#b8c4d4"] },
+      "signal-amber": { "role": "semantic", "displayName": "Wayfinding amber", "canonical": "#f2b544", "tonalRamp": ["#fff8e8", "#f2b544", "#9a5b08"] },
+      "danger": { "role": "semantic", "displayName": "Action red", "canonical": "#b42318", "tonalRamp": ["#fff1f0", "#f1c5c1", "#b42318"] },
+      "success": { "role": "semantic", "displayName": "Verified green", "canonical": "#16794a", "tonalRamp": ["#eaf8f1", "#16794a"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Page identity and dashboard greetings." },
+      "title": { "displayName": "Title", "purpose": "Major content groups and register headings." },
+      "body": { "displayName": "Body", "purpose": "Interface copy and descriptions." },
+      "label": { "displayName": "Label", "purpose": "Fields, metadata, and compact controls." }
+    },
+    "shadows": [
+      { "name": "authentication-shell", "value": "0 22px 60px rgba(41,58,86,.12)", "purpose": "Public entry surface only." },
+      { "name": "dialog", "value": "0 24px 72px rgba(20,33,61,.22)", "purpose": "Modal separation from its backdrop." },
+      { "name": "action-hover", "value": "0 5px 14px rgba(33,70,199,.16)", "purpose": "Short-lived primary action feedback." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "140ms ease", "purpose": "Control hover and pressed-state feedback." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "480px" },
+      { "name": "navigation", "value": "760px" },
+      { "name": "compact-desktop", "value": "1120px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single high-emphasis action in a local group.",
+      "html": "<button class=\"ds-button-primary\">Save changes</button>",
+      "css": ".ds-button-primary{min-height:44px;border:1px solid #2146c7;border-radius:8px;padding:10px 16px;color:#fff;background:#2146c7;font:650 .85rem 'IBM Plex Sans',sans-serif}.ds-button-primary:hover{background:#173b99}.ds-button-primary:focus-visible{outline:3px solid rgba(33,70,199,.28);outline-offset:3px}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A supporting or reversible action.",
+      "html": "<button class=\"ds-button-secondary\">Cancel</button>",
+      "css": ".ds-button-secondary{min-height:44px;border:1px solid #b8c4d4;border-radius:8px;padding:10px 16px;color:#14213d;background:#fff;font:650 .85rem 'IBM Plex Sans',sans-serif}.ds-button-secondary:hover{color:#173b99;background:#f4f7ff}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The canonical labelled data-entry field.",
+      "html": "<label class=\"ds-field\">Course title<input placeholder=\"Software engineering\"></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:#3f4d67;font:650 .82rem 'IBM Plex Sans',sans-serif}.ds-field input{min-height:44px;border:1px solid #b8c4d4;border-radius:8px;padding:11px 13px;color:#14213d;background:#fff}.ds-field input:focus{outline:0;border-color:#2146c7;box-shadow:0 0 0 3px rgba(33,70,199,.12)}"
+    },
+    {
+      "name": "Active navigation item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "The current destination in the permanent campus directory.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\">Dashboard</a>",
+      "css": ".ds-nav-active{display:flex;align-items:center;min-height:44px;border-radius:10px;padding:10px 12px;color:#173b99;background:#fff;font:650 .82rem 'IBM Plex Sans',sans-serif;text-decoration:none;box-shadow:0 6px 18px rgba(8,29,86,.18)}"
+    },
+    {
+      "name": "Register row",
+      "kind": "custom",
+      "refersTo": "register-row",
+      "description": "A ruled academic record with stable metadata alignment.",
+      "html": "<div class=\"ds-register-row\"><strong>CSC 401</strong><span>Software Engineering</span><small>3 credits</small></div>",
+      "css": ".ds-register-row{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px 12px;border-bottom:1px solid #d8e0eb;color:#14213d;font-family:'IBM Plex Sans',sans-serif}.ds-register-row:hover{background:#f4f7ff}.ds-register-row strong{color:#2146c7}.ds-register-row small{color:#68758c}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus Wayfinding",
+    "overview": "A bright campus workspace whose permanent blue directory, focused white work surfaces, and measured information registers make every destination and priority immediately legible.",
+    "keyCharacteristics": ["Deep-blue campus directory", "Bright working surfaces", "Cobalt actions", "Measured spacing contract", "Responsive priority ordering"],
+    "rules": [
+      { "name": "Action and Location", "body": "Blue communicates action, location, or trusted state; amber is a sparing wayfinding signal.", "section": "colors" },
+      { "name": "One Spacing Contract", "body": "Every route uses one full-width workspace and one page inset at each breakpoint; never nest a centered route card inside another padded canvas.", "section": "layout" },
+      { "name": "Flat by Default", "body": "Use alignment, a rule, or a tonal shift before adding elevation.", "section": "elevation" }
+    ],
+    "dos": ["Use the 4/8/12/16/24/32/48px scale.", "Use one divider between repeated records.", "Preserve focus, responsive, and reduced-motion states."],
+    "donts": ["Do not reintroduce a dark application theme.", "Do not turn every section into another card.", "Do not invent padding values or decorative accent colors."]
+  }
+}

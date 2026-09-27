@@ -27,7 +27,7 @@ export const attendanceService = {
     try {
       return await withTransaction(async (client) => {
         await requireCourseOwner(user, courseId, client);
-        if (!(await deviceRepository.find(data.deviceId, client))?.isActive) throw new ApiError(400, 'DEVICE_UNAVAILABLE', 'Choose an active device.');
+        if (!await deviceRepository.isAvailable(data.deviceId, client)) throw new ApiError(409, 'DEVICE_UNAVAILABLE', 'Choose an online, idle device with a ready fingerprint sensor.');
         if (data.scheduleId && (await scheduleRepository.find(data.scheduleId, client))?.courseId !== courseId) throw new ApiError(400, 'VALIDATION_ERROR', 'Schedule must belong to this course.');
         return attendance.open(client, user.userId, courseId, data);
       });
@@ -44,7 +44,7 @@ export const attendanceService = {
     return attendance.close(client, id);
   }),
   active: (device) => attendance.active(device.deviceId),
-  heartbeat: (device) => deviceRepository.heartbeat(device.deviceId),
+  heartbeat: (device, status) => deviceRepository.heartbeat(device.deviceId, status),
   async devices(user) {
     if (user.role !== 'LECTURER') throw new ApiError(403, 'FORBIDDEN', 'Lecturer access required.');
     return deviceRepository.available();
@@ -61,7 +61,7 @@ export const attendanceService = {
         const profile = await attendance.profile(client, device.deviceId, data.sensorSlotId);
         if (!profile) throw new ApiError(404, 'BIOMETRIC_PROFILE_NOT_FOUND', 'Unknown fingerprint mapping.');
         if (!await attendance.eligible(client, session.sessionId, course.courseId, profile.studentId)) throw new ApiError(403, 'STUDENT_NOT_ENROLLED', 'Not enrolled in this session.');
-        const record = await attendance.record(client, session.sessionId, profile.studentId, device.deviceId);
+        const record = await attendance.record(client, session.sessionId, profile.studentId, device.deviceId, data.eventId);
         emit(await notificationRepository.createForUser(client, profile.studentId, { type: 'ATTENDANCE_RECORDED', title: 'Attendance recorded', message: `${course.courseCode}: attendance recorded.`, relatedEntityId: session.sessionId }));
         return { ...record, studentName: profile.studentName };
       });

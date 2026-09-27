@@ -3,6 +3,9 @@ export function createAuthController(service) {
     async register(request, response) {
       response.status(201).json({ success: true, data: await service.register(request.validatedBody) });
     },
+    async registerAdmin(request, response) {
+      response.status(201).json({ success: true, data: await service.registerAdmin(request.validatedBody) });
+    },
     async login(request, response) {
       response.json({ success: true, data: await service.login(request.validatedBody) });
     },

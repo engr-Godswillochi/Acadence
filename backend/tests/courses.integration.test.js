@@ -56,9 +56,22 @@ test('course ownership, enrolment integrity, student access and archival', { ski
     assert.equal((await call(owner, 'post', `/${id}/enrolments`).send({ studentId: student.userId })).status, 201);
     assert.equal((await call(owner, 'delete', `/${id}`)).status, 200);
     assert.equal((await call(owner, 'get', '')).body.data.courses.length, 0);
+    assert.equal((await call(student, 'get', '/archived')).status, 403);
+    assert.equal((await call(other, 'get', '/archived')).body.data.courses.length, 0);
+    const archived = await call(owner, 'get', '/archived');
+    assert.equal(archived.status, 200);
+    assert.equal(archived.body.data.courses[0].courseId, id);
     assert.equal((await call(student, 'get', `/${id}`)).status, 404);
     assert.equal((await call(owner, 'post', `/${id}/enrolments`).send({ studentId: outsider.userId })).status, 404);
     assert.equal((await pool.query('SELECT 1 FROM enrolments WHERE course_id=$1', [id])).rowCount, 1);
+    assert.equal((await call(other, 'post', `/${id}/unarchive`)).status, 403);
+    assert.equal((await call(student, 'post', `/${id}/unarchive`)).status, 403);
+    const restored = await call(owner, 'post', `/${id}/unarchive`);
+    assert.equal(restored.status, 200);
+    assert.equal(restored.body.data.course.archivedAt, null);
+    assert.equal((await call(owner, 'get', '')).body.data.courses.length, 1);
+    assert.equal((await call(student, 'get', `/${id}`)).status, 200);
+    assert.equal((await call(owner, 'post', `/${id}/unarchive`)).status, 404);
   } finally {
     await pool.query('DELETE FROM enrolments WHERE course_id = ANY($1::uuid[])', [ids]);
     await pool.query('DELETE FROM courses WHERE course_id = ANY($1::uuid[])', [ids]);

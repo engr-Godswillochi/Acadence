@@ -611,8 +611,8 @@ User 1 ─── * Notification
 All protected user routes require a valid JWT.
 
 Public prototype registration accepts STUDENT and LECTURER only. ADMIN accounts cannot
-be created through the public endpoint. An institutional deployment must add authorized
-lecturer provisioning before opening registration to the public.
+be created through the public endpoint. Administrators are provisioned through the separate,
+rate-limited admin registration endpoint using the server-configured secret code.
 
 Authentication successes use `{ success: true, data: { accessToken, user } }`; the current
 user endpoint returns `{ success: true, data: { user } }`. Passwords require at least eight
@@ -630,6 +630,7 @@ Device routes require a valid device API key.
 | Method | Endpoint | Description | Role |
 |---|---|---|---|
 | POST | `/api/auth/register` | Register account | Public |
+| POST | `/api/auth/admin/register` | Register administrator with secret code | Public with provisioning secret |
 | POST | `/api/auth/login` | Login and return JWT | Public |
 | GET | `/api/auth/me` | Get authenticated user | Any authenticated user |
 
@@ -742,10 +743,15 @@ server time and must reference a student from that session snapshot.
 | Method | Endpoint | Description | Role |
 |---|---|---|---|
 | GET | `/api/device/session/active` | Get relevant active session | Device |
-| POST | `/api/device/heartbeat` | Update last-seen status | Device |
+| GET | `/api/device/work` | Claim enrollment work or receive the assigned attendance session | Device |
+| POST | `/api/device/heartbeat` | Report last-seen time, mode, firmware, and sensor health | Device |
+| POST | `/api/device/biometric-enrolments/:id/complete` | Confirm that the sensor stored an enrollment model | Device |
+| POST | `/api/device/biometric-enrolments/:id/fail` | Report a failed enrollment capture | Device |
 | POST | `/api/admin/devices` | Register device | Admin |
 | GET | `/api/admin/devices` | List devices | Admin |
 | PATCH | `/api/admin/devices/:id` | Update/disable device | Admin |
+| POST | `/api/admin/devices/:id/rotate-key` | Replace device credential | Admin |
+| GET | `/api/admin/students?q=` | Find a student for biometric mapping | Admin |
 
 ---
 
@@ -753,7 +759,9 @@ server time and must reference a student from that session snapshot.
 
 | Method | Endpoint | Description | Role |
 |---|---|---|---|
-| POST | `/api/admin/biometrics/enrol` | Save student ↔ slot mapping after device enrolment | Admin |
+| POST | `/api/admin/biometric-enrolments` | Create an expiring fingerprint enrollment job | Admin |
+| GET | `/api/admin/biometric-enrolments/:id` | Read enrollment progress | Admin |
+| POST | `/api/admin/biometric-enrolments/:id/cancel` | Cancel unfinished enrollment work | Admin |
 | GET | `/api/admin/biometrics` | List biometric profiles | Admin |
 | DELETE | `/api/admin/biometrics/:id` | Remove biometric mapping | Admin |
 
@@ -1050,6 +1058,9 @@ If enrolment fails:
 - ESP32 development board
 - AS608 fingerprint sensor
 - 128×64 OLED display
+- DS3231 RTC module
+- buzzer
+- RGB status LED
 - jumper wires
 - breadboard or prototype PCB
 - USB/5V power supply
@@ -1064,7 +1075,9 @@ The ESP32:
 - authenticates itself using a device API key;
 - communicates with AS608 through UART;
 - communicates with OLED through I2C;
-- checks whether attendance is currently active;
+- reports its health and operational mode through authenticated heartbeats;
+- polls for one backend-assigned enrollment job or attendance session at a time;
+- drives the OLED, RGB status LED, buzzer, and RTC;
 - accepts fingerprint scans only when appropriate;
 - forwards verified sensor slot IDs to the backend;
 - displays server responses to users.
@@ -1424,6 +1437,13 @@ No AI-generated study sessions are included.
 ---
 
 ### 22.5 Lecturer Dashboard
+
+The empty dashboard presents one first-course setup area with inline course creation.
+It must not repeat zero-count statistics or multiple prompts for the same setup action.
+Once courses exist, the dashboard provides a compact course directory with direct
+links to assignment and attendance management. Navigation uses consistent functional
+icons alongside text labels. The visual direction is documented in
+`docs/architecture/ui-direction.md`.
 
 Recommended sections:
 

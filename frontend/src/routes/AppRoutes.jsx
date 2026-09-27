@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import { AppShell } from '../components/layout/AppShell.jsx';
 import { AuthPage } from '../pages/AuthPage.jsx';
@@ -13,14 +13,24 @@ import { Announcements } from '../features/announcements/Announcements.jsx';
 import { CalendarPage } from '../pages/CalendarPage.jsx';
 import { AttendancePage } from '../pages/AttendancePage.jsx';
 import { DashboardPage } from '../pages/DashboardPage.jsx';
+import { EnrolLinkPage } from '../pages/EnrolLinkPage.jsx';
+import { LandingPage } from '../pages/LandingPage.jsx';
+import { AdminDevicesPage } from '../pages/AdminDevicesPage.jsx';
+import { AdminBiometricsPage } from '../pages/AdminBiometricsPage.jsx';
+import { AdminRegisterPage } from '../pages/AdminRegisterPage.jsx';
 
 export function AppRoutes() {
   return (
     <Routes>
+      {/* The landing page carries its own header, so it sits outside the app shell. */}
+      <Route path="/" element={<LandingPage />} />
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="login" element={<AuthPage key="login" mode="login" />} />
         <Route path="register" element={<AuthPage key="register" mode="register" />} />
+        <Route path="admin/register" element={<AdminRegisterPage />} />
+        {/* Public: a student has to be able to read the course behind a share
+            link before they have an account, so this sits outside ProtectedRoute. */}
+        <Route path="enrol/:token" element={<EnrolLinkPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="account" element={<AccountPage />} />
@@ -34,6 +44,10 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="announcements" element={<Announcements />} /></Route>
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="calendar" element={<CalendarPage />} /></Route>
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="attendance" element={<AttendancePage />} /></Route>
+        <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+          <Route path="admin/devices" element={<AdminDevicesPage />} />
+          <Route path="admin/biometrics" element={<AdminBiometricsPage />} />
+        </Route>
         <Route element={<ProtectedRoute />}><Route path="notifications" element={<NotificationsPage />} /></Route>
       </Route>
     </Routes>

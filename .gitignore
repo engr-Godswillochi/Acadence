@@ -10,6 +10,7 @@ node_modules/
 dist/
 build/
 coverage/
+.vercel/
 
 # Logs
 *.log
@@ -35,3 +36,4 @@ temp/
 
 # Arduino / PlatformIO
 .pio/
+hardware/**/src/secrets.h

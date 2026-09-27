@@ -37,7 +37,7 @@ Follow the implementation phases in `PROJECT_SPEC.md`, beginning with foundation
 
 ## Foundation Development
 
-Use Node.js 20.19 or newer and a local PostgreSQL server.
+Use Node.js 22.13 or newer and a local PostgreSQL server.
 
 ### Backend
 
@@ -52,3 +52,12 @@ Use Node.js 20.19 or newer and a local PostgreSQL server.
 2. Run `npm run dev` in `frontend/`.
 
 Each application has its own lint command. The backend also provides `npm test`, and the frontend provides `npm run build` for production validation.
+
+## Deployment
+
+The repository is configured for two Vercel projects backed by the same GitHub repository:
+
+- `frontend/` — the Vite web application;
+- `backend/` — the Express API.
+
+Use the complete [Vercel deployment guide](./docs/deployment/vercel.md) before the first production deployment. The guide includes the required environment variables, database migration step, CORS setup, and deployment order.
