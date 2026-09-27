@@ -40,6 +40,7 @@ Add these Production and Preview environment variables:
 | `DATABASE_URL` | Supabase transaction-pooler connection string (port 6543) |
 | `MIGRATION_DATABASE_URL` | Supabase direct or session-pooler connection string (port 5432) |
 | `DATABASE_SSL` | `true` when required by the provider |
+| `DATABASE_SSL_CA` | Supabase root certificate from Database Settings |
 | `DATABASE_POOL_MAX` | `1` |
 | `FRONTEND_URLS` | Exact frontend origins, comma-separated |
 | `JWT_SECRET` | Unique random value of at least 32 characters |
@@ -49,6 +50,11 @@ Add these Production and Preview environment variables:
 Generate secrets locally, for example with `openssl rand -hex 32`. Keep the administrator
 registration secret out of the frontend environment: it should be entered only by the person
 authorized to provision administrators.
+
+Download the database root certificate from Supabase **Database Settings → SSL Configuration**
+and paste the complete PEM certificate into `DATABASE_SSL_CA`. Vercel supports multiline
+environment-variable values. This keeps certificate verification enabled for both the runtime
+pool and the migration connection.
 
 The backend's Vercel build command runs `npm run db:migrate` automatically for production
 deployments. Preview builds skip migrations so they cannot change the production schema. The

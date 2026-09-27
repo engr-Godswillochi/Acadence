@@ -53,6 +53,10 @@ function readFrontendOrigins() {
   return [...new Set(configured.length ? configured : local)];
 }
 
+function readCertificate(value) {
+  return value?.replace(/\\n/g, '\n').trim();
+}
+
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 
 if (!supportedEnvironments.has(nodeEnv)) {
@@ -64,6 +68,7 @@ export const env = Object.freeze({
   port: readPort(process.env.PORT),
   databaseUrl: process.env.DATABASE_URL?.trim(),
   databaseSsl: readBoolean(process.env.DATABASE_SSL, false, 'DATABASE_SSL'),
+  databaseSslCa: readCertificate(process.env.DATABASE_SSL_CA),
   databasePoolMax: readPositiveInteger(process.env.DATABASE_POOL_MAX, nodeEnv === 'production' ? 1 : 10, 'DATABASE_POOL_MAX'),
   frontendOrigins: readFrontendOrigins(),
   jwtSecret: process.env.JWT_SECRET?.trim(),
@@ -74,6 +79,10 @@ export const env = Object.freeze({
 export function validateDatabaseEnvironment() {
   if (!env.databaseUrl) {
     throw new Error('DATABASE_URL is required. Copy .env.example to .env and configure PostgreSQL.');
+  }
+
+  if (env.nodeEnv === 'production' && env.databaseSsl && !env.databaseSslCa) {
+    throw new Error('DATABASE_SSL_CA is required in production when DATABASE_SSL=true.');
   }
 }
 

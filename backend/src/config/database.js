@@ -11,7 +11,9 @@ export function createDatabasePool({ connectionString = env.databaseUrl, max = e
 
   return new Pool({
     connectionString,
-    ssl: env.databaseSsl,
+    ssl: env.databaseSsl
+      ? { ca: env.databaseSslCa, rejectUnauthorized: true }
+      : false,
     max,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 10000,

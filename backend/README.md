@@ -49,7 +49,8 @@ PostgreSQL connection, and keep the automatic migration build step enabled.
 
 Production Vercel builds run pending migrations automatically. Set `MIGRATION_DATABASE_URL` to
 a Supabase direct or session-pooler URL for that build step; keep the transaction-pooler URL in
-`DATABASE_URL` for the deployed serverless API. Preview builds intentionally skip migrations.
+`DATABASE_URL` for the deployed serverless API. Set `DATABASE_SSL_CA` to the Supabase root
+certificate so Node can verify the server. Preview builds intentionally skip migrations.
 
 The API accepts browser requests only from the exact comma-separated origins in
 `FRONTEND_URLS`. See [`../docs/deployment/vercel.md`](../docs/deployment/vercel.md) for the
