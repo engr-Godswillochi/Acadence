@@ -88,12 +88,30 @@
 .danger-text { color: var(--danger); }
 .danger-text:hover:not(:disabled) { color: #8e1d14; background: var(--danger-soft); }
 
-.admin-mapping-form > form:last-child fieldset { grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) 140px auto; }
+.admin-enrollment-form > form:last-child fieldset { grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) auto; }
 .admin-student-search { max-width: 720px; margin-bottom: var(--space-5); }
 .admin-student-search label { margin: 0 0 var(--space-2); }
 .admin-student-search > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
 .admin-student-search input { border-radius: 8px 0 0 8px; }
 .admin-student-search button { border-radius: 0 8px 8px 0; }
+.admin-form-hint { grid-column: 1 / -1; margin: var(--space-3) 0 0; color: var(--muted); font-size: .78rem; }
+.admin-enrollment-progress { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(0, 1.4fr) auto; align-items: center; gap: var(--space-6); margin-bottom: var(--space-6); padding: var(--space-5); border: 1px solid var(--border); border-radius: 12px; background: #f6f8fc; }
+.admin-enrollment-status { display: flex; min-width: 0; align-items: center; gap: var(--space-3); }
+.admin-enrollment-icon { display: grid; flex: 0 0 auto; width: 44px; height: 44px; place-items: center; border-radius: 12px; color: var(--accent); background: var(--accent-soft); }
+.admin-enrollment-status > div { min-width: 0; }
+.admin-enrollment-status span:not(.admin-enrollment-icon) { display: block; margin-bottom: 3px; color: var(--accent); font-size: .76rem; font-weight: 700; }
+.admin-enrollment-status h2 { overflow: hidden; margin: 0; color: var(--ink); font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-enrollment-status p { margin: 3px 0 0; color: var(--muted); font-size: .74rem; }
+.admin-enrollment-instruction { min-width: 0; }
+.admin-enrollment-instruction > p { max-width: 68ch; margin: 0 0 var(--space-3); color: var(--ink-soft); font-size: .82rem; line-height: 1.55; }
+.admin-enrollment-instruction dl { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); margin: 0; }
+.admin-enrollment-instruction dl > div { display: flex; gap: var(--space-2); }
+.admin-enrollment-instruction dt { color: var(--muted); font-size: .72rem; }
+.admin-enrollment-instruction dd { margin: 0; color: var(--ink); font-size: .72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.admin-enrollment-actions { display: flex; justify-content: flex-end; }
+.admin-enrollment-progress.is-success .admin-enrollment-icon { color: var(--success); background: var(--success-soft); }
+.admin-enrollment-progress.is-danger .admin-enrollment-icon, .admin-enrollment-progress.is-warning .admin-enrollment-icon { color: var(--danger); background: var(--danger-soft); }
+.admin-enrollment-progress.is-pending .admin-enrollment-icon svg { animation: spin 1.2s linear infinite; }
 .admin-profile-register li { display: grid; grid-template-columns: auto minmax(180px, 1.2fr) minmax(160px, .9fr) minmax(170px, auto) auto; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; }
 .admin-profile-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; color: var(--accent); background: var(--accent-soft); }
 .admin-profile-register time { color: var(--muted); font-size: .72rem; white-space: nowrap; }
@@ -106,8 +124,10 @@
   .admin-profile-register li { grid-template-columns: auto minmax(0, 1fr) minmax(150px, .8fr) auto; }
   .admin-profile-register time { grid-column: 2; }
   .admin-profile-register li > button { grid-column: 4; grid-row: 1 / span 2; }
-  .admin-mapping-form > form:last-child fieldset { grid-template-columns: 1fr 1fr; }
-  .admin-mapping-form .admin-form-actions { grid-column: 1 / -1; }
+  .admin-enrollment-form > form:last-child fieldset { grid-template-columns: 1fr 1fr; }
+  .admin-enrollment-form .admin-form-actions { grid-column: 1 / -1; }
+  .admin-enrollment-progress { grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); }
+  .admin-enrollment-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
 
 @media (max-width: 760px) {
@@ -118,14 +138,17 @@
   .admin-summary > div + div { border-top: 1px solid var(--border); border-left: 0; }
   .admin-summary dd { grid-column: 2; grid-row: 1 / span 2; margin: 0; font-size: 1.8rem; }
   .admin-summary span { grid-column: 1; }
-  .admin-inline-form fieldset, .admin-mapping-form > form:last-child fieldset { grid-template-columns: 1fr; }
-  .admin-form-actions, .admin-mapping-form .admin-form-actions { grid-column: auto; justify-content: stretch; }
+  .admin-inline-form fieldset, .admin-enrollment-form > form:last-child fieldset { grid-template-columns: 1fr; }
+  .admin-form-actions, .admin-enrollment-form .admin-form-actions { grid-column: auto; justify-content: stretch; }
   .admin-form-actions button { flex: 1; }
   .admin-device-register li, .admin-profile-register li { grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); }
   .admin-device-connection, .admin-profile-device, .admin-profile-register time, .admin-device-register .admin-row-actions, .admin-profile-register li > button { grid-column: 2; grid-row: auto; }
   .admin-device-register .admin-row-actions { justify-content: flex-start; }
   .admin-profile-register li > button { justify-self: start; }
   .admin-error { align-items: flex-start; flex-direction: column; }
+  .admin-enrollment-progress { grid-template-columns: 1fr; gap: var(--space-4); }
+  .admin-enrollment-actions { grid-column: auto; }
+  .admin-enrollment-actions button { width: 100%; }
 }
 
 @media (max-width: 480px) {

@@ -13,7 +13,7 @@ import { deviceConnection } from './admin.utils.js';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 const auth = { token: 'admin-token', user: { role: 'ADMIN', fullName: 'System Admin' }, logout: vi.fn() };
-const device = { deviceId: 'd1', deviceName: 'Engineering entrance', location: 'Block A', isActive: true, lastSeenAt: '2026-09-27T10:00:00.000Z' };
+const device = { deviceId: 'd1', deviceName: 'Engineering entrance', location: 'Block A', isActive: true, lastSeenAt: new Date().toISOString(), reportedMode: 'IDLE', sensorReady: true };
 const profile = { biometricProfileId: 'p1', studentId: 's1', studentName: 'Ada Student', matricNumber: 'CSC/2026/001', deviceId: 'd1', deviceName: device.deviceName, sensorSlotId: 12, enrolledAt: '2026-09-27T09:00:00.000Z' };
 
 function mount(element) {
@@ -43,20 +43,27 @@ test('an administrator registers a device and receives its one-time key', async 
   expect(create).toHaveBeenCalledWith('admin-token', { deviceName: 'Engineering entrance', location: 'Block A' });
 });
 
-test('an administrator maps a student to an active device slot', async () => {
+test('an administrator starts device-controlled fingerprint enrolment without choosing a slot', async () => {
   vi.spyOn(adminApi, 'devices').mockResolvedValue({ devices: [device] });
   vi.spyOn(adminApi, 'profiles').mockResolvedValue({ profiles: [] });
   vi.spyOn(adminApi, 'students').mockResolvedValue({ students: [{ userId: 's1', fullName: 'Ada Student', matricNumber: 'CSC/2026/001', email: 'ada@example.test', profileCount: 0 }] });
-  const enrol = vi.spyOn(adminApi, 'enrol').mockResolvedValue({ profile });
+  const job = { jobId: 'j1', studentId: 's1', deviceId: 'd1', sensorSlotId: 12, status: 'PENDING' };
+  const start = vi.spyOn(adminApi, 'startEnrollment').mockResolvedValue({ job });
+  vi.spyOn(adminApi, 'enrollmentJob').mockResolvedValue({ job });
+  const cancel = vi.spyOn(adminApi, 'cancelEnrollment').mockResolvedValue({ job: { ...job, status: 'CANCELLED' } });
   mount(<AdminBiometricsPage />);
   await screen.findByText('No fingerprint mappings saved.');
-  await userEvent.click(screen.getByRole('button', { name: 'New mapping' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Enrol fingerprint' }));
   await screen.findByRole('option', { name: /Ada Student/ });
   await userEvent.selectOptions(screen.getByLabelText('Student'), 's1');
   await userEvent.selectOptions(screen.getByLabelText('Device'), 'd1');
-  await userEvent.type(screen.getByLabelText('Sensor slot ID'), '12');
-  await userEvent.click(screen.getByRole('button', { name: 'Save mapping' }));
-  expect(enrol).toHaveBeenCalledWith('admin-token', { studentId: 's1', deviceId: 'd1', sensorSlotId: 12 });
+  expect(screen.queryByLabelText('Sensor slot ID')).toBeNull();
+  await userEvent.click(screen.getByRole('button', { name: 'Start enrolment' }));
+  expect(start).toHaveBeenCalledWith('admin-token', { studentId: 's1', deviceId: 'd1' });
+  expect(await screen.findByText(/Waiting for Engineering entrance/)).toBeTruthy();
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel enrolment' }));
+  expect(cancel).toHaveBeenCalledWith('admin-token', 'j1');
+  expect(await screen.findByText('No fingerprint mapping was created.')).toBeTruthy();
 });
 
 test('device connection state distinguishes online, offline and disabled hardware', () => {

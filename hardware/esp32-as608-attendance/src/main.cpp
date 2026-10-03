@@ -6,7 +6,9 @@
 #include <Adafruit_Fingerprint.h>
 #include <Adafruit_SSD1306.h>
 #include <RTClib.h>
-#include "secrets.h"
+#include "connectivity_status.h"
+#include "device_config.h"
+#include "provisioning_portal.h"
 
 namespace Hardware {
 constexpr uint8_t fingerprintRx = 16;
@@ -17,7 +19,8 @@ constexpr uint8_t ledGreen = 26;
 constexpr uint8_t ledBlue = 27;
 constexpr uint8_t oledAddress = 0x3C;
 constexpr uint32_t fingerprintBaud = 57600;
-constexpr char firmwareVersion[] = "1.0.0";
+constexpr unsigned long wifiProvisioningTimeout = 30000;
+constexpr char firmwareVersion[] = "1.1.0";
 }
 
 enum class DeviceMode { Idle, Enrollment, Attendance, Error };
@@ -27,6 +30,9 @@ HardwareSerial sensorSerial(2);
 Adafruit_Fingerprint finger(&sensorSerial);
 Adafruit_SSD1306 oled(128, 64, &Wire, -1);
 RTC_DS3231 rtc;
+DeviceConfigStore configStore;
+DeviceConfig deviceConfig;
+ProvisioningPortal provisioningPortal;
 
 DeviceMode mode = DeviceMode::Error;
 EnrollmentStage enrollmentStage = EnrollmentStage::None;
@@ -37,14 +43,19 @@ uint16_t enrollmentSlot = 0;
 bool sensorReady = false;
 bool rtcReady = false;
 bool clockSynchronized = false;
+bool wifiWasConnected = false;
 unsigned long nextWifiAttempt = 0;
+unsigned long wifiConnectStarted = 0;
 unsigned long nextHeartbeat = 0;
 unsigned long nextWorkPoll = 0;
 unsigned long nextScan = 0;
+String serialCommand;
 
 bool due(unsigned long now, unsigned long deadline) {
   return static_cast<long>(now - deadline) >= 0;
 }
+
+void failureFeedback(const String& heading, const String& detail);
 
 const char* modeName() {
   switch (mode) {
@@ -80,6 +91,54 @@ void show(const String& heading, const String& detail = "") {
   oled.display();
 }
 
+void showConnectivity(ConnectivityState state, const String& detailOverride = "") {
+  const ConnectivityMessage message = connectivityMessage(state);
+  show(message.heading, detailOverride.length() ? detailOverride : String(message.detail));
+}
+
+void showProvisioningDetails() {
+  oled.clearDisplay();
+  oled.setTextSize(1);
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setCursor(0, 0);
+  oled.println("Phone setup");
+  oled.println(provisioningPortal.networkName());
+  oled.print("Pass: ");
+  oled.println(provisioningPortal.networkPassword());
+  oled.println("Open 192.168.4.1");
+  oled.display();
+}
+
+void startProvisioning() {
+  setRgb(true, true, false);
+  if (provisioningPortal.begin(configStore)) {
+    showProvisioningDetails();
+    Serial.println("Provisioning access point ready at 192.168.4.1");
+    return;
+  }
+  mode = DeviceMode::Error;
+  failureFeedback("Setup failed", "Restart the device");
+}
+
+void handleSerialCommands() {
+  while (Serial.available()) {
+    const char character = static_cast<char>(Serial.read());
+    if (character == '\r') continue;
+    if (character != '\n') {
+      if (serialCommand.length() < 32) serialCommand += character;
+      continue;
+    }
+
+    serialCommand.trim();
+    serialCommand.toLowerCase();
+    if (serialCommand == "setup") {
+      Serial.println("Starting phone setup at 192.168.4.1");
+      startProvisioning();
+    }
+    serialCommand = "";
+  }
+}
+
 void successFeedback(const String& heading, const String& detail = "") {
   setRgb(false, true, false);
   show(heading, detail);
@@ -95,7 +154,7 @@ void failureFeedback(const String& heading, const String& detail = "") {
 }
 
 void addDeviceHeaders(HTTPClient& http) {
-  http.addHeader("X-Device-Key", DEVICE_API_KEY);
+  http.addHeader("X-Device-Key", deviceConfig.deviceApiKey);
   http.addHeader("Content-Type", "application/json");
 }
 
@@ -103,7 +162,7 @@ int apiRequest(const String& method, const String& path, const String& body, Dyn
   HTTPClient http;
   http.setConnectTimeout(4000);
   http.setTimeout(5000);
-  http.begin(String(API_BASE_URL) + path);
+  http.begin(deviceConfig.apiBaseUrl + path);
   addDeviceHeaders(http);
   int status = method == "GET" ? http.GET() : http.POST(body);
   const String payload = http.getString();
@@ -133,18 +192,39 @@ void synchronizeClock() {
 
 bool ensureWifi() {
   if (WiFi.status() == WL_CONNECTED) {
+    if (!wifiWasConnected) {
+      wifiWasConnected = true;
+      setRgb(false, false, true);
+      showConnectivity(ConnectivityState::WifiConnected, WiFi.localIP().toString());
+    }
     synchronizeClock();
     return true;
   }
+  wifiWasConnected = false;
   const unsigned long now = millis();
+  if (due(now, wifiConnectStarted + Hardware::wifiProvisioningTimeout)) {
+    startProvisioning();
+    return false;
+  }
   if (due(now, nextWifiAttempt)) {
     WiFi.disconnect();
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin(deviceConfig.wifiSsid.c_str(), deviceConfig.wifiPassword.c_str());
     nextWifiAttempt = now + 10000;
   }
   setRgb(true, false, true);
-  show("Network unavailable", "Reconnecting...");
+  showConnectivity(ConnectivityState::NetworkUnavailable);
   return false;
+}
+
+void showBackendResult(int status) {
+  if (mode != DeviceMode::Idle || WiFi.status() != WL_CONNECTED) return;
+  if (status >= 200 && status < 300) {
+    setRgb(false, false, true);
+    showConnectivity(ConnectivityState::Ready);
+  } else if (status <= 0 || status >= 500) {
+    setRgb(true, false, true);
+    showConnectivity(ConnectivityState::ServerUnavailable);
+  }
 }
 
 void sendHeartbeat() {
@@ -156,7 +236,8 @@ void sendHeartbeat() {
   String payload;
   serializeJson(body, payload);
   DynamicJsonDocument response(256);
-  apiRequest("POST", "/device/heartbeat", payload, response);
+  const int status = apiRequest("POST", "/device/heartbeat", payload, response);
+  showBackendResult(status);
 }
 
 void clearEnrollment() {
@@ -205,7 +286,8 @@ void beginEnrollment(const JsonObjectConst& enrollment) {
   enrollmentStage = EnrollmentStage::FirstCapture;
   mode = DeviceMode::Enrollment;
   setRgb(true, true, false);
-  show("Enroll fingerprint", "Place finger");
+  const String matricNumber = enrollment["matricNumber"].as<String>();
+  show("Enroll fingerprint", (matricNumber.length() ? matricNumber + "\n" : "") + "Place finger");
 }
 
 void applyWork(const JsonObjectConst& work) {
@@ -233,6 +315,7 @@ void applyWork(const JsonObjectConst& work) {
 void pollWork() {
   DynamicJsonDocument response(1536);
   const int status = apiRequest("GET", "/device/work", "", response);
+  showBackendResult(status);
   if (status == 200 && !response["data"]["work"].isNull()) {
     applyWork(response["data"]["work"].as<JsonObjectConst>());
   } else if (status == 401) {
@@ -361,11 +444,24 @@ void setup() {
     mode = DeviceMode::Idle;
   }
 
+  if (!configStore.load(deviceConfig)) {
+    startProvisioning();
+    return;
+  }
+
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(deviceConfig.wifiSsid.c_str(), deviceConfig.wifiPassword.c_str());
+  wifiConnectStarted = millis();
+  showConnectivity(ConnectivityState::Connecting, deviceConfig.wifiSsid);
 }
 
 void loop() {
+  handleSerialCommands();
+  if (provisioningPortal.active()) {
+    provisioningPortal.handle();
+    delay(2);
+    return;
+  }
   const unsigned long now = millis();
   if (!ensureWifi()) {
     delay(100);
