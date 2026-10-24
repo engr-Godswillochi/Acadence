@@ -27,6 +27,7 @@ export const deviceRepository = {
          AND NOT EXISTS (
            SELECT 1 FROM biometric_enrollment_jobs j
            WHERE j.device_id=d.device_id AND j.status IN ('PENDING','CLAIMED')
+             AND j.expires_at > CURRENT_TIMESTAMP
          )
          AND NOT EXISTS (
            SELECT 1 FROM attendance_sessions s
@@ -45,6 +46,7 @@ export const deviceRepository = {
          AND NOT EXISTS (
            SELECT 1 FROM biometric_enrollment_jobs j
            WHERE j.device_id=d.device_id AND j.status IN ('PENDING','CLAIMED')
+             AND j.expires_at > CURRENT_TIMESTAMP
          )
          AND NOT EXISTS (
            SELECT 1 FROM attendance_sessions s

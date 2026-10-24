@@ -10,8 +10,14 @@ ConnectivityMessage connectivityMessage(ConnectivityState state) {
       return {"Wi-Fi connected", "Contacting server"};
     case ConnectivityState::ServerUnavailable:
       return {"Server unavailable", "Check Acadence API"};
+    case ConnectivityState::FingerprintUnavailable:
+      return {"Fingerprint error", "Check sensor wiring"};
     case ConnectivityState::Ready:
       return {"Device ready", "Waiting for work"};
   }
   return {"Device error", "Restart device"};
+}
+
+ConnectivityState idleConnectivityState(bool sensorReady) {
+  return sensorReady ? ConnectivityState::Ready : ConnectivityState::FingerprintUnavailable;
 }

@@ -25,7 +25,7 @@ constexpr bool rgbCommonAnode = RGB_COMMON_ANODE;
 constexpr uint8_t oledAddress = 0x3C;
 constexpr uint32_t fingerprintBaud = 57600;
 constexpr unsigned long wifiProvisioningTimeout = 30000;
-constexpr char firmwareVersion[] = "1.2.0";
+constexpr char firmwareVersion[] = "1.2.1";
 }
 
 enum class DeviceMode { Idle, Enrollment, Attendance, Error };
@@ -54,6 +54,7 @@ unsigned long wifiConnectStarted = 0;
 unsigned long nextHeartbeat = 0;
 unsigned long nextWorkPoll = 0;
 unsigned long nextScan = 0;
+unsigned long nextSensorAttempt = 0;
 String serialCommand;
 
 bool due(unsigned long now, unsigned long deadline) {
@@ -142,6 +143,11 @@ void handleSerialCommands() {
     if (serialCommand == "setup") {
       Serial.println("Starting phone setup at 192.168.4.1");
       startProvisioning();
+    } else if (serialCommand == "status") {
+      Serial.print("Mode: ");
+      Serial.println(modeName());
+      Serial.print("Fingerprint sensor: ");
+      Serial.println(sensorReady ? "ready" : "unavailable");
     }
     serialCommand = "";
   }
@@ -196,6 +202,21 @@ void synchronizeClock() {
   time_t epoch = mktime(&timeInfo);
   rtc.adjust(DateTime(static_cast<uint32_t>(epoch)));
   clockSynchronized = true;
+}
+
+void recoverFingerprintSensor() {
+  if (sensorReady || !due(millis(), nextSensorAttempt)) return;
+  nextSensorAttempt = millis() + 5000;
+  sensorReady = finger.verifyPassword();
+  if (!sensorReady) return;
+
+  finger.getParameters();
+  mode = DeviceMode::Idle;
+  nextHeartbeat = 0;
+  nextWorkPoll = 0;
+  setRgb(false, false, true);
+  show("Fingerprint ready", "Contacting server");
+  Serial.println("Fingerprint sensor recovered");
 }
 
 bool ensureWifi() {
@@ -299,6 +320,15 @@ void beginEnrollment(const JsonObjectConst& enrollment) {
 }
 
 void applyWork(const JsonObjectConst& work) {
+  if (!sensorReady) {
+    clearEnrollment();
+    attendanceSessionId = "";
+    attendanceCourseCode = "";
+    mode = DeviceMode::Error;
+    setRgb(true, false, false);
+    showConnectivity(idleConnectivityState(false));
+    return;
+  }
   const String requestedMode = work["mode"].as<String>();
   if (requestedMode == "ENROLLMENT") {
     beginEnrollment(work["enrollment"].as<JsonObjectConst>());
@@ -317,7 +347,7 @@ void applyWork(const JsonObjectConst& work) {
   attendanceCourseCode = "";
   mode = DeviceMode::Idle;
   setRgb(false, false, true);
-  show("Device ready", "Waiting for work");
+  showConnectivity(idleConnectivityState(sensorReady));
 }
 
 void pollWork() {
@@ -448,6 +478,7 @@ void setup() {
   sensorReady = finger.verifyPassword();
   if (sensorReady) finger.getParameters();
   if (!sensorReady) {
+    nextSensorAttempt = millis() + 2000;
     mode = DeviceMode::Error;
     failureFeedback("Fingerprint error", "Check sensor wiring");
   } else {
@@ -473,6 +504,7 @@ void loop() {
     return;
   }
   const unsigned long now = millis();
+  recoverFingerprintSensor();
   if (!ensureWifi()) {
     delay(100);
     return;

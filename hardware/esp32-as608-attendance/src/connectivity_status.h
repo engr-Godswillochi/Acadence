@@ -5,6 +5,7 @@ enum class ConnectivityState {
   NetworkUnavailable,
   WifiConnected,
   ServerUnavailable,
+  FingerprintUnavailable,
   Ready
 };
 
@@ -14,3 +15,4 @@ struct ConnectivityMessage {
 };
 
 ConnectivityMessage connectivityMessage(ConnectivityState state);
+ConnectivityState idleConnectivityState(bool sensorReady);

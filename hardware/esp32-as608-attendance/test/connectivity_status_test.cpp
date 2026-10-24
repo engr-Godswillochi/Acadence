@@ -11,5 +11,9 @@ int main() {
   const ConnectivityMessage unavailable = connectivityMessage(ConnectivityState::ServerUnavailable);
   assert(std::strcmp(unavailable.heading, "Server unavailable") == 0);
   assert(std::strcmp(unavailable.detail, "Check Acadence API") == 0);
+
+  const ConnectivityMessage sensorUnavailable = connectivityMessage(idleConnectivityState(false));
+  assert(std::strcmp(sensorUnavailable.heading, "Fingerprint error") == 0);
+  assert(std::strcmp(sensorUnavailable.detail, "Check sensor wiring") == 0);
   return 0;
 }
