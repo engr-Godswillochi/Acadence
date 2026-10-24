@@ -474,6 +474,31 @@ input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--acce
 .account-profile .account-details { border-top-color: var(--border); }
 .not-found, .state-panel { max-width: 720px; padding: var(--space-7); }
 .not-found > svg, .state-panel > svg { color: var(--accent); }
+.workspace-loader {
+  display: grid;
+  width: min(320px, 100%);
+  min-height: calc(100svh - 170px);
+  margin: 0 auto;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.workspace-loader-mark { width: 50px; height: 40px; color: var(--accent); }
+.workspace-loader-copy { display: grid; gap: var(--space-2); margin-top: var(--space-5); }
+.workspace-loader-copy h1 { margin: 0; font-size: 1.15rem; letter-spacing: -.02em; }
+.workspace-loader-copy p { margin: 0; color: var(--muted); font-size: .82rem; }
+.workspace-loader-track { position: relative; width: 96px; height: 3px; overflow: hidden; margin-top: var(--space-5); border-radius: 3px; background: var(--accent-soft); }
+.workspace-loader-track > span { position: absolute; inset: 0 auto 0 0; width: 44%; border-radius: inherit; background: var(--accent); animation: workspace-loader-sweep 1.15s cubic-bezier(.65, 0, .35, 1) infinite; }
+@keyframes workspace-loader-sweep {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(335%); }
+}
+@media (max-width: 760px) {
+  .workspace-loader { min-height: calc(100svh - 126px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-loader-track > span { width: 100%; animation: none; opacity: .72; }
+}
 
 /* Public course invitation */
 .enrol-page { border: 1px solid #d4deeb; border-radius: 18px; background: #fff; box-shadow: 0 24px 68px rgba(28, 46, 81, .12); }

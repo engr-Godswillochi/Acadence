@@ -52,6 +52,17 @@ test('expired session clears its token and returns to sign in', async () => {
   expect(sessionStorage.getItem('acadence.accessToken')).toBeNull();
 });
 
+test('session restoration uses the compact branded loading state', () => {
+  sessionStorage.setItem('acadence.accessToken', 'test-token');
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
+  const { container } = mount();
+
+  expect(screen.getByRole('heading', { name: 'Opening Acadence' })).toBeTruthy();
+  expect(screen.getByRole('status').textContent).toBe('Restoring your workspace');
+  expect(container.querySelector('.workspace-loader')).toBeTruthy();
+  expect(container.querySelector('.state-panel')).toBeNull();
+});
+
 test('temporary session restoration failure preserves the token and supports retry', async () => {
   sessionStorage.setItem('acadence.accessToken', 'test-token');
   const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new TypeError('Offline')).mockResolvedValue(response({ user: { fullName: 'Ada Student', role: 'STUDENT' } }));
