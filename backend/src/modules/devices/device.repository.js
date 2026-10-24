@@ -30,7 +30,7 @@ export const deviceRepository = {
          )
          AND NOT EXISTS (
            SELECT 1 FROM attendance_sessions s
-           WHERE s.device_id=d.device_id AND s.status='ACTIVE'
+           WHERE s.device_id=d.device_id AND s.status='ACTIVE' AND s.expires_at > CURRENT_TIMESTAMP
          )
        ORDER BY d.device_name`,
     )).rows;
@@ -48,7 +48,7 @@ export const deviceRepository = {
          )
          AND NOT EXISTS (
            SELECT 1 FROM attendance_sessions s
-           WHERE s.device_id=d.device_id AND s.status='ACTIVE'
+           WHERE s.device_id=d.device_id AND s.status='ACTIVE' AND s.expires_at > CURRENT_TIMESTAMP
          )`,
       [id],
     )).rowCount > 0;

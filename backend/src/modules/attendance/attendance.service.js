@@ -20,13 +20,14 @@ async function owner(user, courseId, client) {
   return course;
 }
 export const attendanceService = {
-  async list(user, courseId) { await owner(user, courseId); return attendance.list(courseId); },
-  async get(user, id) { const item = await find(id); await owner(user, item.courseId); return item; },
+  async list(user, courseId) { await owner(user, courseId); await attendance.expireActive(); return attendance.list(courseId); },
+  async get(user, id) { await attendance.expireActive(); const item = await find(id); await owner(user, item.courseId); return item; },
   async records(user, id) { await this.get(user, id); return attendance.records(id); },
   async open(user, courseId, data) {
     try {
       return await withTransaction(async (client) => {
         await requireCourseOwner(user, courseId, client);
+        await attendance.expireActive(client);
         if (!await deviceRepository.isAvailable(data.deviceId, client)) throw new ApiError(409, 'DEVICE_UNAVAILABLE', 'Choose an online, idle device with a ready fingerprint sensor.');
         if (data.scheduleId && (await scheduleRepository.find(data.scheduleId, client))?.courseId !== courseId) throw new ApiError(400, 'VALIDATION_ERROR', 'Schedule must belong to this course.');
         return attendance.open(client, user.userId, courseId, data);
@@ -52,6 +53,7 @@ export const attendanceService = {
   async submit(device, data) {
     try {
       return await withNotifications(async (client, emit) => {
+        await attendance.expireActive(client);
         const initial = await find(data.sessionId, client);
         const course = await courseRepository.find(initial.courseId, client, true);
         if (!(await deviceRepository.find(device.deviceId, client))?.isActive) throw new ApiError(401, 'DEVICE_UNAUTHORIZED', 'Unauthorized device.');

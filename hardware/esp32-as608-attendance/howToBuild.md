@@ -6,7 +6,7 @@
 - AS608 fingerprint sensor
 - 128×64 I2C OLED at address `0x3C`
 - DS3231 RTC module
-- common-cathode RGB LED with suitable current-limiting resistors
+- common-anode four-leg RGB LED with one 200–330 ohm current-limiting resistor on each colour leg
 - active or passive buzzer
 - jumper wires, regulated power, and a shared ground
 
@@ -22,9 +22,12 @@
 | RGB red | GPIO25 through resistor |
 | RGB green | GPIO26 through resistor |
 | RGB blue | GPIO27 through resistor |
+| RGB common (longest leg) | 3.3V |
 | Buzzer signal | GPIO14 |
 
 Change the constants in `src/main.cpp` if the final PCB uses different pins. Verify the voltage rating of the exact AS608 and OLED boards before powering them.
+
+The firmware build sets `RGB_COMMON_ANODE=1`. The longest RGB leg is the shared anode and goes directly to 3.3V; the other three legs each need their own resistor before GPIO25, GPIO26, and GPIO27. If the exact LED datasheet says it is common-cathode instead, connect the longest leg to GND and change the build flag to `RGB_COMMON_ANODE=0`.
 
 ## Build and flash
 
@@ -37,6 +40,8 @@ Change the constants in `src/main.cpp` if the final PCB uses different pins. Ver
 Do not enter `localhost` as the server host: from the ESP32, that address refers to the ESP32 itself. Use the computer's local network IP address, for example `http://192.168.1.20:3000/api`.
 
 To reopen setup later without clearing the stored configuration, connect by USB, open the 115200-baud serial monitor, enter `setup`, and press Enter. The OLED will display the setup network and password again.
+
+Rotating a device key invalidates the key stored by the ESP32 immediately. On the next rejected request, firmware 1.2.0 and later opens phone setup automatically so the newly generated key can be saved. You can also enter `setup` over serial.
 
 ## Commissioning
 

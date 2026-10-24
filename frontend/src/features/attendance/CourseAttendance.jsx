@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Activity, Check, Clock3, Fingerprint, Radio, ScanLine } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.jsx';
-import { formatAcademicDate, formatAcademicDateOnly, formatWatTime } from '../../utils/date.js';
+import { formatAcademicDateOnly, formatWatTime } from '../../utils/date.js';
 import { useAuth } from '../auth/useAuth.js';
 import { attendanceApi } from './attendance.api.js';
 
@@ -41,6 +41,7 @@ export function CourseAttendance({ courseId }) {
   const [sessions, setSessions] = useState(null);
   const [devices, setDevices] = useState(null);
   const [deviceId, setDeviceId] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState(15);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -69,6 +70,13 @@ export function CourseAttendance({ courseId }) {
   const active = sessions?.find((session) => session.status === 'ACTIVE');
   const closed = sessions?.filter((session) => session.status === 'CLOSED') ?? [];
 
+  useEffect(() => {
+    if (!active?.expiresAt) return undefined;
+    const remaining = Math.max(0, new Date(active.expiresAt).getTime() - Date.now()) + 500;
+    const timer = setTimeout(() => setRevision((value) => value + 1), remaining);
+    return () => clearTimeout(timer);
+  }, [active?.expiresAt]);
+
   async function open() {
     if (!deviceId) {
       setError('Choose an active attendance device before opening the session.');
@@ -77,7 +85,7 @@ export function CourseAttendance({ courseId }) {
     setBusy(true);
     setError('');
     try {
-      await attendanceApi.open(token, courseId, { deviceId });
+      await attendanceApi.open(token, courseId, { deviceId, durationMinutes });
       setRevision((value) => value + 1);
     } catch (failure) {
       report(failure);
@@ -111,12 +119,13 @@ export function CourseAttendance({ courseId }) {
     </header>
     {error && !closing && <div role="alert"><p>{error}</p><button type="button" onClick={() => { setError(''); setRevision((value) => value + 1); }}>Retry attendance</button></div>}
     {!sessions || !devices ? (!error && !closing ? <p className="course-section-loading" role="status">Loading attendance…</p> : null) : active ? <>
-      <div className="attendance-active-note"><Radio size={18} aria-hidden="true" /><p>Attendance is open. Students are added to the register after a verified scan.</p><time dateTime={active.openedAt}><Clock3 size={14} aria-hidden="true" />Opened {formatAcademicDate(active.openedAt)}</time></div>
+      <div className="attendance-active-note"><Radio size={18} aria-hidden="true" /><p>Attendance is open. Students are added to the register after a verified scan.</p><time dateTime={active.expiresAt}><Clock3 size={14} aria-hidden="true" />Closes at {formatWatTime(active.expiresAt)} WAT</time></div>
       <SessionRegister session={active} token={token} onFailure={report} />
     </> : <div className="attendance-ready">
       <Fingerprint size={22} aria-hidden="true" />
       <div><h3>Ready to take attendance.</h3><p>Select an active device, then open the class register.</p></div>
       <label>Attendance device<select value={deviceId} onChange={(event) => setDeviceId(event.target.value)}><option value="">Select active device</option>{devices.map((device) => <option value={device.deviceId} key={device.deviceId}>{device.deviceName}{device.location ? ` · ${device.location}` : ''}</option>)}</select></label>
+      <label>Attendance time frame<select value={durationMinutes} onChange={(event) => setDurationMinutes(Number(event.target.value))}><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1 hour 30 minutes</option><option value="120">2 hours</option></select></label>
       {!devices.length && <p className="course-section-empty">An administrator must register and activate a device before attendance can open.</p>}
     </div>}
     {closed.length > 0 && <section className="course-session-history">

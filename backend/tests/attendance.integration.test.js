@@ -31,8 +31,9 @@ test('attendance accepts only mapped scans for active session roster and freezes
     assert.equal((await user(student, 'post', path).send({ deviceId: devices[0] })).status, 403);
     assert.equal((await user(other, 'post', path).send({ deviceId: devices[0] })).status, 403);
     assert.equal((await user(owner, 'post', path).send({ deviceId: randomUUID() })).status, 400);
-    const opened = await user(owner, 'post', path).send({ deviceId: devices[0] }); assert.equal(opened.status, 201);
+    const opened = await user(owner, 'post', path).send({ deviceId: devices[0], durationMinutes: 5 }); assert.equal(opened.status, 201);
     const sessionId = opened.body.data.session.sessionId;
+    assert.ok(new Date(opened.body.data.session.expiresAt) > new Date(opened.body.data.session.openedAt));
     assert.equal((await user(owner, 'post', path).send({ deviceId: devices[1] })).status, 409);
     assert.equal((await request(app).get('/api/device/session/active')).status, 401);
     assert.equal((await device(0, 'get', '/device/session/active')).body.data.session.sessionId, sessionId);
@@ -50,6 +51,9 @@ test('attendance accepts only mapped scans for active session roster and freezes
     const summary = await user(student, 'get', '/attendance/my/summary'); assert.deepEqual(summary.body.data.summaries[0], { courseId, courseCode: summary.body.data.summaries[0].courseCode, eligibleSessions: 1, attendedSessions: 1, percentage: 100 });
     assert.equal((await user(student, 'get', '/attendance/my')).body.data.attendance[0].recordedAt !== null, true);
     assert.equal((await user(outsider, 'get', '/attendance/my/summary')).body.data.summaries.length, 0);
+    await pool.query("UPDATE attendance_sessions SET status='ACTIVE',closed_at=NULL,expires_at=CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE session_id=$1", [sessionId]);
+    assert.equal((await device(0, 'get', '/device/session/active')).body.data.session, null);
+    assert.equal((await pool.query('SELECT status FROM attendance_sessions WHERE session_id=$1', [sessionId])).rows[0].status, 'CLOSED');
     assert.equal((await device(0, 'post', '/device/heartbeat').send({ mode: 'IDLE', firmwareVersion: 'test', sensorReady: true, sensorCapacity: 162 })).status, 200);
     assert.equal((await pool.query('SELECT last_seen_at FROM biometric_devices WHERE device_id=$1', [devices[0]])).rows[0].last_seen_at !== null, true);
   } finally {

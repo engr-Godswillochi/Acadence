@@ -10,6 +10,10 @@
 #include "device_config.h"
 #include "provisioning_portal.h"
 
+#ifndef RGB_COMMON_ANODE
+#define RGB_COMMON_ANODE 1
+#endif
+
 namespace Hardware {
 constexpr uint8_t fingerprintRx = 16;
 constexpr uint8_t fingerprintTx = 17;
@@ -17,10 +21,11 @@ constexpr uint8_t buzzer = 14;
 constexpr uint8_t ledRed = 25;
 constexpr uint8_t ledGreen = 26;
 constexpr uint8_t ledBlue = 27;
+constexpr bool rgbCommonAnode = RGB_COMMON_ANODE;
 constexpr uint8_t oledAddress = 0x3C;
 constexpr uint32_t fingerprintBaud = 57600;
 constexpr unsigned long wifiProvisioningTimeout = 30000;
-constexpr char firmwareVersion[] = "1.1.0";
+constexpr char firmwareVersion[] = "1.2.0";
 }
 
 enum class DeviceMode { Idle, Enrollment, Attendance, Error };
@@ -68,9 +73,12 @@ const char* modeName() {
 }
 
 void setRgb(bool red, bool green, bool blue) {
-  digitalWrite(Hardware::ledRed, red ? HIGH : LOW);
-  digitalWrite(Hardware::ledGreen, green ? HIGH : LOW);
-  digitalWrite(Hardware::ledBlue, blue ? HIGH : LOW);
+  const auto level = [](bool on) {
+    return on == Hardware::rgbCommonAnode ? LOW : HIGH;
+  };
+  digitalWrite(Hardware::ledRed, level(red));
+  digitalWrite(Hardware::ledGreen, level(green));
+  digitalWrite(Hardware::ledBlue, level(blue));
 }
 
 void show(const String& heading, const String& detail = "") {
@@ -320,7 +328,9 @@ void pollWork() {
     applyWork(response["data"]["work"].as<JsonObjectConst>());
   } else if (status == 401) {
     mode = DeviceMode::Error;
-    failureFeedback("Device disabled", "Contact administrator");
+    failureFeedback("Device key rejected", "Opening phone setup");
+    delay(900);
+    startProvisioning();
   }
 }
 

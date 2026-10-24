@@ -473,11 +473,14 @@ A record may be created when the assignment is published or lazily when the stud
 | opened_at | TIMESTAMP | |
 | closed_at | TIMESTAMP | nullable |
 | status | ENUM | ACTIVE, CLOSED |
-| expires_at | TIMESTAMP | nullable |
+| expires_at | TIMESTAMP | required; derived from the lecturer-selected duration |
 
 Business rule:
 
-A course should normally have at most one active attendance session at a time.
+A course should normally have at most one active attendance session at a time. Opening a
+session requires a duration from 5 to 180 minutes (15 minutes by default). After
+`expires_at`, the backend closes the session before returning device work or accepting a
+scan, so abandoned sessions cannot keep a course or device reserved indefinitely.
 
 ---
 

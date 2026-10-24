@@ -1,16 +1,27 @@
 import { getDatabasePool } from '../../config/database.js';
 
-const columns = `s.session_id AS "sessionId", s.course_id AS "courseId", s.device_id AS "deviceId", s.schedule_id AS "scheduleId", s.status, s.opened_at AS "openedAt", s.closed_at AS "closedAt"`;
+const columns = `s.session_id AS "sessionId", s.course_id AS "courseId", s.device_id AS "deviceId", s.schedule_id AS "scheduleId", s.status, s.opened_at AS "openedAt", s.expires_at AS "expiresAt", s.closed_at AS "closedAt"`;
 export const attendanceRepository = {
+  async expireActive(client = getDatabasePool()) {
+    return (await client.query(
+      `UPDATE attendance_sessions AS s
+       SET status='CLOSED',closed_at=s.expires_at
+       WHERE s.status='ACTIVE' AND s.expires_at <= CURRENT_TIMESTAMP
+       RETURNING ${columns}`,
+    )).rows;
+  },
   async find(id, client = getDatabasePool()) { return (await client.query(`SELECT ${columns} FROM attendance_sessions s WHERE session_id=$1`, [id])).rows[0]; },
   async list(courseId) { return (await getDatabasePool().query(`SELECT ${columns}, (SELECT count(*)::int FROM attendance_records r WHERE r.session_id=s.session_id) AS "presentCount", (SELECT count(*)::int FROM attendance_session_students e WHERE e.session_id=s.session_id) AS "eligibleCount" FROM attendance_sessions s WHERE course_id=$1 ORDER BY opened_at DESC`, [courseId])).rows; },
   async open(client, userId, courseId, data) {
-    const item = (await client.query(`INSERT INTO attendance_sessions AS s (course_id,device_id,schedule_id,opened_by) VALUES ($1,$2,$3,$4) RETURNING ${columns}`, [courseId, data.deviceId, data.scheduleId ?? null, userId])).rows[0];
+    const item = (await client.query(`INSERT INTO attendance_sessions AS s (course_id,device_id,schedule_id,opened_by,expires_at) VALUES ($1,$2,$3,$4,CURRENT_TIMESTAMP + make_interval(mins => $5)) RETURNING ${columns}`, [courseId, data.deviceId, data.scheduleId ?? null, userId, data.durationMinutes])).rows[0];
     await client.query('INSERT INTO attendance_session_students (session_id,student_id) SELECT $1,student_id FROM enrolments WHERE course_id=$2', [item.sessionId, courseId]);
     return item;
   },
   async close(client, id) { return (await client.query(`UPDATE attendance_sessions AS s SET status='CLOSED',closed_at=CURRENT_TIMESTAMP WHERE session_id=$1 RETURNING ${columns}`, [id])).rows[0]; },
-  async active(deviceId, client = getDatabasePool()) { return (await client.query(`SELECT ${columns}, c.course_code AS "courseCode" FROM attendance_sessions s JOIN courses c ON c.course_id=s.course_id WHERE s.device_id=$1 AND s.status='ACTIVE' AND c.archived_at IS NULL`, [deviceId])).rows[0] ?? null; },
+  async active(deviceId, client = getDatabasePool()) {
+    await this.expireActive(client);
+    return (await client.query(`SELECT ${columns}, c.course_code AS "courseCode" FROM attendance_sessions s JOIN courses c ON c.course_id=s.course_id WHERE s.device_id=$1 AND s.status='ACTIVE' AND c.archived_at IS NULL`, [deviceId])).rows[0] ?? null;
+  },
   async profile(client, deviceId, slot) { return (await client.query('SELECT p.student_id AS "studentId", u.full_name AS "studentName" FROM biometric_profiles p JOIN users u ON u.user_id=p.student_id WHERE p.device_id=$1 AND p.sensor_slot_id=$2 AND p.is_active=true AND u.role=\'STUDENT\' FOR SHARE OF p,u', [deviceId, slot])).rows[0]; },
   async eligible(client, sessionId, courseId, studentId) { return (await client.query('SELECT 1 FROM attendance_session_students s JOIN enrolments e ON e.student_id=s.student_id AND e.course_id=$2 WHERE s.session_id=$1 AND s.student_id=$3', [sessionId, courseId, studentId])).rowCount > 0; },
   async record(client, sessionId, studentId, deviceId, eventId = null) { return (await client.query('INSERT INTO attendance_records (session_id,student_id,device_id,device_event_id) VALUES ($1,$2,$3,$4) RETURNING record_id AS "recordId", recorded_at AS "recordedAt"', [sessionId, studentId, deviceId, eventId])).rows[0]; },
