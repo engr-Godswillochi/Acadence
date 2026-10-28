@@ -1,0 +1,51 @@
+/* Lecturer attendance sheet — one session's register, live while open and official once closed. */
+.attendance-sheet-banner { justify-content: flex-start; min-height: 0; }
+.attendance-sheet-banner > svg { flex: 0 0 auto; color: #f7ca68; }
+.attendance-sheet-banner > div { flex: 1 1 auto; min-width: 0; }
+.attendance-sheet-banner > div > span { display: block; margin-bottom: 6px; color: #f7ca68; font-size: .78rem; font-weight: 650; }
+.attendance-sheet-banner h1 { letter-spacing: -.04em; }
+.sheet-state { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; color: #173b99; background: #fff; font-size: .74rem; }
+.sheet-state.is-live { color: var(--success); background: var(--success-soft); }
+
+.sheet-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 var(--space-5); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sheet-summary > div { min-width: 0; padding: var(--space-4) var(--space-5); }
+.sheet-summary > div + div { border-left: 1px solid var(--border); }
+.sheet-summary dt { color: var(--muted); font-size: .76rem; font-weight: 650; }
+.sheet-summary dd { margin: var(--space-2) 0 0; color: var(--ink); font-size: 2rem; font-weight: 700; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+
+.sheet-live-note { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); color: var(--muted); font-size: .8rem; }
+.sheet-live-note svg { flex: 0 0 auto; color: var(--success); }
+
+.sheet-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.sheet-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.sheet-filters button { min-height: 36px; padding: 6px 12px; font-size: .78rem; }
+.sheet-search { position: relative; flex: 1 1 220px; display: flex; align-items: center; margin: 0; }
+.sheet-search svg { position: absolute; left: 11px; color: var(--muted); pointer-events: none; }
+.sheet-search input { width: 100%; margin: 0; padding-left: 34px; }
+
+.sheet-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--surface); }
+.attendance-sheet { width: 100%; min-width: 620px; border-collapse: collapse; font-size: .84rem; }
+.attendance-sheet th, .attendance-sheet td { padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.attendance-sheet thead th { color: var(--muted); background: var(--surface-subtle); font-size: .72rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.attendance-sheet tbody th { color: var(--ink); background: transparent; font-size: .84rem; font-weight: 650; }
+.attendance-sheet tbody tr:last-child > * { border-bottom: 0; }
+.attendance-sheet td:first-child { width: 48px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.attendance-sheet time { display: inline-flex; align-items: center; gap: 5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.sheet-status { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 9px; font-size: .72rem; font-weight: 700; }
+.sheet-status.is-present { color: #11663f; background: var(--success-soft); }
+.sheet-status.is-absent { color: var(--danger); background: var(--danger-soft); }
+.sheet-status.is-waiting { color: var(--warning); background: var(--warning-soft); }
+.sheet-no-match { color: var(--muted); text-align: center; }
+
+/* Links from the course attendance tab into a session's sheet. */
+.sheet-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: .78rem; font-weight: 650; text-decoration: none; }
+.sheet-link:hover { text-decoration: underline; }
+.live-register header > span { margin-left: auto; }
+.course-session-history li .session-sheet-cell { justify-items: end; color: var(--muted); font-size: .73rem; }
+
+@media (max-width: 760px) {
+  .sheet-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sheet-summary > div:nth-child(3) { border-left: 0; }
+  .sheet-summary > div:nth-child(n + 3) { border-top: 1px solid var(--border); }
+  .attendance-sheet-banner { flex-wrap: wrap; }
+}

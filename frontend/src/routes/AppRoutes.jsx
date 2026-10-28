@@ -12,6 +12,7 @@ import { NotificationsPage } from '../pages/NotificationsPage.jsx';
 import { Announcements } from '../features/announcements/Announcements.jsx';
 import { CalendarPage } from '../pages/CalendarPage.jsx';
 import { AttendancePage } from '../pages/AttendancePage.jsx';
+import { AttendanceSheetPage } from '../pages/AttendanceSheetPage.jsx';
 import { DashboardPage } from '../pages/DashboardPage.jsx';
 import { EnrolLinkPage } from '../pages/EnrolLinkPage.jsx';
 import { LandingPage } from '../pages/LandingPage.jsx';
@@ -38,6 +39,9 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute roles={['LECTURER', 'STUDENT']} />}>
           <Route path="courses" element={<CoursesPage />} />
           <Route path="courses/:id" element={<CourseDetailsPage />} />
+        </Route>
+        <Route element={<ProtectedRoute roles={['LECTURER']} />}>
+          <Route path="courses/:id/attendance/:sessionId" element={<AttendanceSheetPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
         <Route element={<ProtectedRoute roles={['STUDENT']} />}><Route path="assignments" element={<AssignmentsPage />} /></Route>

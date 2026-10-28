@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, Check, Clock3, Fingerprint, Radio, ScanLine } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Activity, Check, ClipboardList, Clock3, Fingerprint, Radio, ScanLine } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.jsx';
 import { formatAcademicDateOnly, formatWatTime } from '../../utils/date.js';
 import { useAuth } from '../auth/useAuth.js';
@@ -27,6 +28,7 @@ function SessionRegister({ session, token, onFailure }) {
     <header>
       <div><h3>Live register</h3><p>{present} of {records.length} students recorded</p></div>
       <span><Radio size={14} aria-hidden="true" />Live</span>
+      <Link className="sheet-link" to={`/courses/${session.courseId}/attendance/${session.sessionId}`}><ClipboardList size={15} aria-hidden="true" />Open attendance sheet</Link>
     </header>
     {!records.length ? <p className="course-section-empty">No students were enrolled when this session opened.</p> : <ol>{records.map((record) => <li key={record.studentId}>
       <span className={record.recordedAt ? 'record-mark is-present' : 'record-mark'}>{record.recordedAt ? <Check size={15} aria-hidden="true" /> : <Fingerprint size={15} aria-hidden="true" />}</span>
@@ -130,7 +132,7 @@ export function CourseAttendance({ courseId }) {
     </div>}
     {closed.length > 0 && <section className="course-session-history">
       <header><h3>Recent sessions</h3><span>{closed.length} recorded</span></header>
-      <ul>{closed.map((session) => <li key={session.sessionId}><Clock3 size={16} aria-hidden="true" /><div><strong>{formatAcademicDateOnly(session.openedAt)}</strong><small>{formatWatTime(session.openedAt)} WAT</small></div><span>{session.presentCount}/{session.eligibleCount} present</span></li>)}</ul>
+      <ul>{closed.map((session) => <li key={session.sessionId}><Clock3 size={16} aria-hidden="true" /><div><strong>{formatAcademicDateOnly(session.openedAt)}</strong><small>{formatWatTime(session.openedAt)} WAT</small></div><div className="session-sheet-cell"><span>{session.presentCount}/{session.eligibleCount} present</span><Link className="sheet-link" to={`/courses/${courseId}/attendance/${session.sessionId}`} aria-label={`View attendance sheet for ${formatAcademicDateOnly(session.openedAt)}, ${formatWatTime(session.openedAt)} WAT`}>View sheet</Link></div></li>)}</ul>
     </section>}
   </section>;
 }

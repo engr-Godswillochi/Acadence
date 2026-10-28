@@ -9,6 +9,7 @@ import './styles/index.css';
 // Campus Wayfinding is the canonical visual layer; index.css supplies the shared structural base.
 import './styles/registry-light.css';
 import './styles/admin.css';
+import './styles/attendance-sheet.css';
 
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
